@@ -1,4 +1,3 @@
-// src/hooks/useRecipeForm.ts
 import { useState, useEffect, useMemo } from "react";
 import { Recipe, Ingredient } from "@/types/recipe";
 import { recipeSchema } from "@/lib/recipeSchema";
@@ -30,7 +29,7 @@ const createDefaultFormData = (): RecipeFormData => ({
   title: "",
   description: "",
   servings: 4,
-  ingredients: [{ name: "", quantity: undefined, unit: "", notes: "" }],
+  ingredients: [{ name: "", quantity: undefined, unit: undefined, notes: "" }],
   steps: [{ text: "", imageUrl: undefined, imageFile: undefined }],
   tags: "",
   dietary: [],
@@ -66,8 +65,18 @@ export const useRecipeForm = (initialRecipe?: Recipe) => {
       const normalizedIngredients = (initialRecipe.ingredients || []).map(
         (ing: any) => ({
           name: typeof ing.name === "string" ? ing.name : ing.name?.name || "",
-          quantity: ing.name?.quantity || ing.quantity || "",
-          unit: ing.name?.unit || ing.unit || "",
+          quantity:
+            ing.name?.quantity !== undefined
+              ? ing.name.quantity
+              : ing.quantity !== undefined
+              ? ing.quantity
+              : undefined,
+          unit:
+            ing.name?.unit !== undefined
+              ? ing.name.unit
+              : ing.unit !== undefined
+              ? ing.unit
+              : undefined,
           notes: ing.name?.notes || ing.notes || "",
         })
       );
@@ -92,13 +101,9 @@ export const useRecipeForm = (initialRecipe?: Recipe) => {
         minActiveMinutes: initialRecipe.minActivePrepTime % 60,
         maxActiveHours: Math.floor(initialRecipe.maxActivePrepTime / 60),
         maxActiveMinutes: initialRecipe.maxActivePrepTime % 60,
-        minPassiveHours: Math.floor(
-          (initialRecipe.minPassiveTime || 0) / 60
-        ),
+        minPassiveHours: Math.floor((initialRecipe.minPassiveTime || 0) / 60),
         minPassiveMinutes: (initialRecipe.minPassiveTime || 0) % 60,
-        maxPassiveHours: Math.floor(
-          (initialRecipe.maxPassiveTime || 0) / 60
-        ),
+        maxPassiveHours: Math.floor((initialRecipe.maxPassiveTime || 0) / 60),
         maxPassiveMinutes: (initialRecipe.maxPassiveTime || 0) % 60,
         hasPassiveTime: !!(
           initialRecipe.minPassiveTime && initialRecipe.maxPassiveTime
@@ -119,9 +124,7 @@ export const useRecipeForm = (initialRecipe?: Recipe) => {
           ...i,
           name: String(i.name || "").trim(),
           quantity:
-            i.quantity === "" || i.quantity === undefined
-              ? undefined
-              : parseFloat(String(i.quantity)),
+            i.quantity === undefined ? undefined : parseFloat(String(i.quantity)),
         })),
       steps: formData.steps.filter((s) => String(s.text || "").trim() !== ""),
       minActivePrepTime:
@@ -176,7 +179,7 @@ export const useRecipeForm = (initialRecipe?: Recipe) => {
       ...prev,
       ingredients: [
         ...prev.ingredients,
-        { name: "", quantity: undefined, unit: "", notes: "" },
+        { name: "", quantity: undefined, unit: undefined, notes: "" },
       ],
     }));
   };
@@ -228,12 +231,10 @@ export const useRecipeForm = (initialRecipe?: Recipe) => {
         ? prev.dietary.filter((v) => v !== value)
         : [...prev.dietary, value];
 
-      // Auto-add vegetarian when vegan is selected
       if (value === "vegan" && !next.includes("vegetarian")) {
         next.push("vegetarian");
       }
 
-      // Prevent removing vegetarian if vegan is selected
       if (value === "vegetarian" && prev.dietary.includes("vegan")) {
         return prev;
       }

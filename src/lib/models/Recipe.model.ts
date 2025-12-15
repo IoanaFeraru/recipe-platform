@@ -1,4 +1,3 @@
-// src/lib/models/Recipe.model.ts
 import { Recipe, Ingredient, DietaryOption } from "@/types/recipe";
 import { formatTime, numberToFraction } from "@/lib/utils/formatting";
 
@@ -9,63 +8,36 @@ import { formatTime, numberToFraction } from "@/lib/utils/formatting";
 export class RecipeModel {
   constructor(private data: Recipe) {}
 
-  // Getters
-  get id(): string | undefined {
-    return this.data.id;
-  }
+  get id(): string | undefined { return this.data.id; }
+  get title(): string { return this.data.title; }
+  get description(): string | undefined { return this.data.description; }
+  get imageUrl(): string | undefined { return this.data.imageUrl; }
+  get authorId(): string { return this.data.authorId; }
+  get authorName(): string | undefined { return this.data.authorName; }
+  get tags(): string[] { return this.data.tags; }
+  get steps(): Array<{ text: string; imageUrl?: string }> { return this.data.steps; }
 
-  get title(): string {
-    return this.data.title;
-  }
+  get difficulty(): "easy" | "medium" | "hard" {return this.data.difficulty ?? "medium"; }
+  
+  get ingredients(): Ingredient[] { return this.data.ingredients; }
+  get dietary(): DietaryOption[] { return this.data.dietary; }
 
-  get servings(): number {
-    return this.data.servings;
-  }
+  get totalActiveTime(): number { return this.data.maxActivePrepTime; }
+  get totalPassiveTime(): number { return this.data.maxPassiveTime || 0; }
+  get totalTime(): number { return this.totalActiveTime + this.totalPassiveTime; }
+  get hasPassiveTime(): boolean { return this.totalPassiveTime > 0; }
+  get formattedTotalTime(): string { return formatTime(this.totalTime); }
+  get formattedActiveTime(): string { return formatTime(this.totalActiveTime); }
+  get formattedPassiveTime(): string { return formatTime(this.totalPassiveTime); }
 
-  get ingredients(): Ingredient[] {
-    return this.data.ingredients;
-  }
+  get servings(): number { return this.data.servings; }
 
-  get dietary(): DietaryOption[] {
-    return this.data.dietary;
-  }
-
-  get totalActiveTime(): number {
-    return this.data.maxActivePrepTime;
-  }
-
-  get totalPassiveTime(): number {
-    return this.data.maxPassiveTime || 0;
-  }
-
-  get totalTime(): number {
-    return this.totalActiveTime + this.totalPassiveTime;
-  }
-
-  get hasPassiveTime(): boolean {
-    return this.totalPassiveTime > 0;
-  }
-
-  get formattedTotalTime(): string {
-    return formatTime(this.totalTime);
-  }
-
-  get formattedActiveTime(): string {
-    return formatTime(this.totalActiveTime);
-  }
-
-  get formattedPassiveTime(): string {
-    return formatTime(this.totalPassiveTime);
-  }
-
-  // Business Logic Methods
 
   /**
    * Scale ingredients for a different number of servings
    */
   getScaledIngredients(targetServings: number): Ingredient[] {
     const scaleFactor = targetServings / this.servings;
-
     return this.ingredients.map((ingredient) => ({
       ...ingredient,
       quantity: ingredient.quantity
@@ -77,72 +49,37 @@ export class RecipeModel {
   /**
    * Get formatted scaled ingredient text
    */
-  getScaledIngredientText(
-    ingredient: Ingredient,
-    targetServings: number
-  ): string {
-    if (!ingredient.quantity) {
-      return ingredient.name;
-    }
+  getScaledIngredientText(ingredient: Ingredient, targetServings: number): string {
+    if (!ingredient.quantity) return ingredient.name;
 
-    const scaledQuantity =
-      (ingredient.quantity / this.servings) * targetServings;
+    const scaledQuantity = (ingredient.quantity / this.servings) * targetServings;
     const formattedQuantity = numberToFraction(scaledQuantity);
 
     let text = `${formattedQuantity}`;
-    if (ingredient.unit) {
-      text += ` ${ingredient.unit}`;
-    }
+    if (ingredient.unit) text += ` ${ingredient.unit}`;
     text += ` ${ingredient.name}`;
-
-    if (ingredient.notes) {
-      text += ` (${ingredient.notes})`;
-    }
+    if (ingredient.notes) text += ` (${ingredient.notes})`;
 
     return text;
   }
 
   /**
-   * Check if recipe meets dietary requirements
+   * Dietarty checks
    */
-  isDietary(option: DietaryOption): boolean {
-    return this.dietary.includes(option);
-  }
-
-  /**
-   * Check if recipe is vegetarian
-   */
-  isVegetarian(): boolean {
-    return this.isDietary("vegetarian");
-  }
-
-  /**
-   * Check if recipe is vegan
-   */
-  isVegan(): boolean {
-    return this.isDietary("vegan");
-  }
-
-  /**
-   * Check if recipe is gluten-free
-   */
-  isGlutenFree(): boolean {
-    return this.isDietary("glutenFree");
-  }
+  isDietary(option: DietaryOption): boolean { return this.dietary.includes(option); }
+  isVegetarian(): boolean { return this.isDietary("vegetarian"); }
+  isVegan(): boolean { return this.isDietary("vegan"); }
+  isGlutenFree(): boolean { return this.isDietary("glutenFree"); }
 
   /**
    * Get difficulty color
    */
   getDifficultyColor(): string {
     switch (this.data.difficulty) {
-      case "easy":
-        return "var(--color-success)";
-      case "medium":
-        return "var(--color-warning)";
-      case "hard":
-        return "var(--color-danger)";
-      default:
-        return "var(--color-text-muted)";
+      case "easy": return "var(--color-success)";
+      case "medium": return "var(--color-warning)";
+      case "hard": return "var(--color-danger)";
+      default: return "var(--color-text-muted)";
     }
   }
 
@@ -157,9 +94,7 @@ export class RecipeModel {
    * Get formatted rating
    */
   getFormattedRating(): string {
-    if (!this.hasRating()) {
-      return "No ratings yet";
-    }
+    if (!this.hasRating()) return "No ratings yet";
     return `${this.data.avgRating?.toFixed(1)} (${this.data.reviewCount} reviews)`;
   }
 

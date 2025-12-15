@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { DietaryOption } from "@/types/recipe";
-import Tag from "./Tag";
+import Tag from "./Tag/Tag";
 
 export type SortOption =
   | "az"
