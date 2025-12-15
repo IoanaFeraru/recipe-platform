@@ -1,13 +1,4 @@
-import {
-  collection,
-  query,
-  orderBy,
-  limit,
-  startAfter,
-  getDocs,
-  QueryDocumentSnapshot,
-  where,
-} from "firebase/firestore";
+import {collection, query, orderBy, limit, startAfter, getDocs, QueryDocumentSnapshot, where} from "firebase/firestore";
 import { db } from "./firebase";
 import { Recipe, Ingredient } from "@/types/recipe";
 
@@ -20,22 +11,12 @@ export const fetchRecipesPage = async (
 ) => {
   const collectionRef = collection(db, "recipes");
   const constraints: any[] = [];
-
-  if (selectedTag) {
-    constraints.push(where("tags", "array-contains", selectedTag));
-  }
-
+  if (selectedTag) {constraints.push(where("tags", "array-contains", selectedTag));}
   constraints.push(orderBy("createdAt", "desc"));
-
-  if (cursor) {
-    constraints.push(startAfter(cursor));
-  }
-
+  if (cursor) {constraints.push(startAfter(cursor));}
   constraints.push(limit(PAGE_SIZE + 1));
-
   const q = query(collectionRef, ...constraints);
   const snapshot = await getDocs(q);
-
   const docs = snapshot.docs;
   const hasNext = docs.length > PAGE_SIZE;
 

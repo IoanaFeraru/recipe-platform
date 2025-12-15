@@ -6,8 +6,6 @@ import { storage } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
 import { validateImageFile } from "@/lib/imageValidation";
 import { useRecipeValidation } from "@/hooks/useRecipeValidation";
-
-// Import child components
 import { RecipeModalHeader } from "./RecipeModalHeader";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { DietaryOptionsSelector } from "./DietaryOptionsSelector";
@@ -39,7 +37,7 @@ interface RecipeModalProps {
 /**
  * RecipeModal - Main orchestrator component
  * Coordinates child components and handles form submission
- * 
+ *
  * Reduced from 650+ lines to ~180 lines (72% reduction)
  */
 export default function RecipeModal({
@@ -48,18 +46,13 @@ export default function RecipeModal({
   onSubmit,
   editRecipe,
 }: RecipeModalProps) {
-  // Basic Info State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [servings, setServings] = useState<number | string>(4);
   const [difficulty, setDifficulty] = useState<string>("");
   const [mealType, setMealType] = useState<string>("");
   const [tags, setTags] = useState("");
-
-  // Dietary State
   const [dietary, setDietary] = useState<string[]>([]);
-
-  // Time State
   const [minActiveHours, setMinActiveHours] = useState(0);
   const [minActiveMinutes, setMinActiveMinutes] = useState(0);
   const [maxActiveHours, setMaxActiveHours] = useState(0);
@@ -69,27 +62,18 @@ export default function RecipeModal({
   const [maxPassiveHours, setMaxPassiveHours] = useState(0);
   const [maxPassiveMinutes, setMaxPassiveMinutes] = useState(0);
   const [hasPassiveTime, setHasPassiveTime] = useState(false);
-
-  // Image State
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const [mainImageProgress, setMainImageProgress] = useState(0);
-
-  // Ingredients State
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: "", quantity: undefined, unit: "", notes: "" },
   ]);
-
-  // Steps State
   const [steps, setSteps] = useState<Step[]>([
     { text: "", imageUrl: undefined, imageFile: undefined },
   ]);
   const [stepsProgress, setStepsProgress] = useState<number[]>([0]);
-
-  // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validation
   const validationData = {
     title: String(title || "").trim(),
     ingredients: ingredients
@@ -109,7 +93,6 @@ export default function RecipeModal({
 
   const { isValid, errors } = useRecipeValidation(validationData);
 
-  // Initialize form with edit data
   useEffect(() => {
     if (editRecipe) {
       setTitle(editRecipe.title);
@@ -120,20 +103,19 @@ export default function RecipeModal({
       setTags(editRecipe.tags.join(", "));
       setDietary(editRecipe.dietary || []);
 
-      // Normalize ingredients
-      const normalizedIngredients = (editRecipe.ingredients || []).map((ing: any) => ({
-        name: typeof ing.name === "string" ? ing.name : ing.name?.name || "",
-        quantity: ing.name?.quantity || ing.quantity || "",
-        unit: ing.name?.unit || ing.unit || "",
-        notes: ing.name?.notes || ing.notes || "",
-      }));
+      const normalizedIngredients = (editRecipe.ingredients || []).map(
+        (ing: any) => ({
+          name: typeof ing.name === "string" ? ing.name : ing.name?.name || "",
+          quantity: ing.name?.quantity || ing.quantity || "",
+          unit: ing.name?.unit || ing.unit || "",
+          notes: ing.name?.notes || ing.notes || "",
+        })
+      );
       setIngredients(
         normalizedIngredients.length
           ? normalizedIngredients
           : [{ name: "", quantity: "", unit: "", notes: "" }]
       );
-
-      // Steps
       setSteps(
         editRecipe.steps.map((s: any) => ({
           text: s.text,
@@ -247,7 +229,8 @@ export default function RecipeModal({
       uploadTask.on(
         "state_changed",
         (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           onProgress(progress);
         },
         (error) => reject(error),
@@ -293,7 +276,8 @@ export default function RecipeModal({
     const maxPassiveTime = maxPassiveHours * 60 + maxPassiveMinutes;
 
     const parsedServings = parseInt(String(servings));
-    const finalServings = isNaN(parsedServings) || parsedServings < 1 ? 1 : parsedServings;
+    const finalServings =
+      isNaN(parsedServings) || parsedServings < 1 ? 1 : parsedServings;
 
     setIsSubmitting(true);
 
@@ -430,7 +414,9 @@ export default function RecipeModal({
                 { name: "", quantity: undefined, unit: "", notes: "" },
               ])
             }
-            onRemove={(i) => setIngredients(ingredients.filter((_, idx) => idx !== i))}
+            onRemove={(i) =>
+              setIngredients(ingredients.filter((_, idx) => idx !== i))
+            }
             onUpdate={(i, field, value) => {
               const updated = [...ingredients];
               updated[i] = { ...updated[i], [field]: value };
@@ -444,7 +430,10 @@ export default function RecipeModal({
             steps={steps}
             stepsProgress={stepsProgress}
             onAdd={() => {
-              setSteps([...steps, { text: "", imageUrl: undefined, imageFile: undefined }]);
+              setSteps([
+                ...steps,
+                { text: "", imageUrl: undefined, imageFile: undefined },
+              ]);
               setStepsProgress((prev) => [...prev, 0]);
             }}
             onRemove={(i) => {

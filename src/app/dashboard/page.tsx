@@ -11,21 +11,9 @@ import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
 import { EmptyDashboard } from "@/components/Dashboard/EmptyDashboard";
 import { RecipeGridWithActions } from "@/components/Dashboard/RecipeGridWithActions";
 
-/**
- * DashboardPage - User's recipe management page
- * Refactored from 150 lines to ~80 lines (47% reduction)
- * 
- * Architecture:
- * - useUserRecipes: Fetches user's recipes and provides CRUD operations
- * - useRecipeActions: Manages modal state and orchestrates CRUD with error handling
- * - DashboardHeader: Page title + create button
- * - EmptyDashboard: Empty state with CTA (reuses EmptyState)
- * - RecipeGridWithActions: Grid with edit/delete overlays
- */
 export default function DashboardPage() {
   const { user } = useAuth();
 
-  // Fetch user's recipes
   const {
     recipes,
     loading,
@@ -35,7 +23,6 @@ export default function DashboardPage() {
     deleteRecipe,
   } = useUserRecipes(user?.uid);
 
-  // Recipe CRUD actions and modal state
   const {
     isModalOpen,
     editingRecipe,
@@ -56,7 +43,6 @@ export default function DashboardPage() {
     deleteRecipe,
   });
 
-  // Loading state
   if (loading) {
     return (
       <ProtectedRoute>
@@ -67,7 +53,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <ProtectedRoute>

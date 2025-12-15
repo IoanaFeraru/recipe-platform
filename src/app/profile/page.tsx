@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AuthCard from "@/components/AuthCard";
+import AuthCard from "@/components/Auth/AuthCard";
 import { useAuth } from "@/context/AuthContext";
 import Button from "@/components/Button";
 import { updateProfile } from "firebase/auth";

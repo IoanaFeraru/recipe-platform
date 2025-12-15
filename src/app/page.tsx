@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Recipe } from "@/types/recipe";
-import FilterBar from "@/components/FilterBar";
+import FilterBar from "@/components/FilterBar/FilterBar";
 import { useRecipeFilters } from "@/hooks/useRecipeFilters";
 import { useRecipePagination } from "@/hooks/useRecipePagination";
 import { RecipeGrid } from "@/components/RecipeGrid";

@@ -34,16 +34,10 @@ export default function RecipePage() {
   const params = useParams();
   const { user } = useAuth();
 
-  // Extract recipe ID from params
   const recipeId = typeof params.id === "string" ? params.id : params.id?.[0];
-
-  // Fetch recipe data
   const { recipe, loading, error } = useRecipe(recipeId);
-
-  // Create domain model instance
   const recipeModel = recipe ? new RecipeModel(recipe) : null;
 
-  // Custom hooks for feature logic
   const { creator } = useCreatorInfo(recipeModel?.authorId, recipeModel?.authorName);
   const { isFavorite, toggle: toggleFavorite, loading: favoriteLoading } = useIsFavorite(recipe?.id);
   const {
@@ -53,7 +47,6 @@ export default function RecipePage() {
     getScaledIngredientText,
   } = useRecipeScaling(recipeModel);
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-(--color-bg) flex items-center justify-center">
@@ -65,7 +58,6 @@ export default function RecipePage() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-(--color-bg) flex items-center justify-center p-8">
@@ -80,7 +72,6 @@ export default function RecipePage() {
     );
   }
 
-  // Recipe not found
   if (!recipeModel) {
     return (
       <div className="min-h-screen bg-(--color-bg) flex items-center justify-center p-8">
@@ -99,10 +90,7 @@ export default function RecipePage() {
 
   return (
     <div className="min-h-screen bg-(--color-bg)">
-      {/* Navigation */}
       <RecipeNavigation />
-
-      {/* Hero Image */}
       <RecipeImage imageUrl={recipeModel.imageUrl} title={recipeModel.title} />
 
       {/* Main Content */}

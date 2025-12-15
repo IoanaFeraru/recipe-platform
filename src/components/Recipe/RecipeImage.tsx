@@ -27,9 +27,11 @@ export const RecipeImage: React.FC<RecipeImageProps> = ({
         className="object-cover"
         priority
         sizes="100vw"
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
+        }}
       />
-      {/* Gradient overlay for better text readability on following content */}
-      <div className="absolute inset-0 bg-linear-to-b from-transparent to-(--color-bg) opacity-30" />
     </div>
   );
 };

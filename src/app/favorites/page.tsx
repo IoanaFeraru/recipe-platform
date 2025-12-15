@@ -1,6 +1,6 @@
 "use client";
 
-import RecipeCard from "@/components/RecipeCard";
+import RecipeCard from "@/components/RecipeCard/RecipeCard";
 import { useFavorites } from "@/hooks/useFavorites";
 
 export default function FavoritesPage() {

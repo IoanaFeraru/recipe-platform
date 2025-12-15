@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import RecipeCard from "@/components/RecipeCard";
+import RecipeCard from "@/components/RecipeCard/RecipeCard";
 import { Recipe } from "@/types/recipe";
 
 interface RecipeGridWithActionsProps {
