@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Recipe } from "@/types/recipe";
-import { useFavorites } from "@/context/FavoritesContext";
+import { useIsFavorite } from "@/hooks/useFavorites";
 import Tag from "./Tag";
 
 interface Props {
@@ -33,12 +33,14 @@ const dietaryLabels: Record<string, string> = {
 };
 
 export default function RecipeCard({ recipe, onTagClick }: Props) {
-  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const { isFavorite, toggle, loading } = useIsFavorite(recipe.id);
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!recipe.id) return;
-    isFavorite(recipe.id) ? removeFavorite(recipe.id) : addFavorite(recipe.id);
+    e.stopPropagation();
+    if (!loading) {
+      toggle();
+    }
   };
 
   const formatTime = (minutes: number) => {
@@ -57,7 +59,6 @@ export default function RecipeCard({ recipe, onTagClick }: Props) {
         borderColor: "var(--color-border)",
       }}
     >
-      {/* Card */}
       <Link href={`/recipes/${recipe.id}`} className="block cursor-pointer">
         {/* Image */}
         {recipe.imageUrl ? (
@@ -84,18 +85,19 @@ export default function RecipeCard({ recipe, onTagClick }: Props) {
             >
               {recipe.title}
             </h2>
+
             <button
-              onClick={toggleFavorite}
-              className="text-xl transition"
-              style={{
-                color:
-                  recipe.id && isFavorite(recipe.id)
-                    ? "red"
-                    : "var(--color-text-muted)",
-              }}
+              onClick={handleToggleFavorite}
+              disabled={loading}
               aria-label="Favorite"
+              className="text-xl transition disabled:opacity-50"
+              style={{
+                color: isFavorite
+                  ? "red"
+                  : "var(--color-text-muted)",
+              }}
             >
-              {recipe.id && isFavorite(recipe.id) ? "❤️" : "🤍"}
+              {isFavorite ? "❤️" : "🤍"}
             </button>
           </div>
 
@@ -144,7 +146,7 @@ export default function RecipeCard({ recipe, onTagClick }: Props) {
           {recipe.difficulty && (
             <div className="mb-3">
               <span
-                className="text-xs px-2 py-1 rounded-full"
+                className="text-xs px-2 py-1 rounded-full text-white"
                 style={{
                   backgroundColor:
                     recipe.difficulty === "easy"
@@ -152,7 +154,6 @@ export default function RecipeCard({ recipe, onTagClick }: Props) {
                       : recipe.difficulty === "medium"
                       ? "var(--color-warning)"
                       : "var(--color-danger)",
-                  color: "white",
                 }}
               >
                 {recipe.difficulty.charAt(0).toUpperCase() +
@@ -167,11 +168,8 @@ export default function RecipeCard({ recipe, onTagClick }: Props) {
               {recipe.dietary.slice(0, 3).map((diet) => (
                 <span
                   key={diet}
-                  className="text-xs px-2 py-1 rounded-full"
-                  style={{
-                    backgroundColor: "var(--color-success)",
-                    color: "white",
-                  }}
+                  className="text-xs px-2 py-1 rounded-full text-white"
+                  style={{ backgroundColor: "var(--color-success)" }}
                 >
                   {dietaryIcons[diet]} {dietaryLabels[diet]}
                 </span>

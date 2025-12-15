@@ -9,37 +9,31 @@ import AuthCard from "@/components/AuthCard";
 import AuthMotion from "@/components/AuthMotion";
 import { motion } from "framer-motion";
 import { updateProfile } from "firebase/auth";
-
-type Strength = "weak" | "medium" | "strong";
-
-export function getPasswordStrength(password: string): {
-  level: Strength;
-  score: number;
-  message: string;
-} {
-  let score = 0;
-
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-
-  if (score <= 1) return { level: "weak", score, message: "Too short or too simple" };
-  if (score === 2) return { level: "medium", score, message: "Add numbers or symbols" };
-  return { level: "strong", score, message: "Strong password" };
-}
+import { validateEmail, validatePassword, validatePasswordMatch, validateRequiredText } from "@/lib/utils/validation";
 
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [error, setError] = useState<string>("");
   const [shake, setShake] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
+
+  const getPasswordStrength = (password: string) => {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    if (score <= 1) return { level: "weak", score, message: "Too short or too simple" };
+    if (score === 2) return { level: "medium", score, message: "Add numbers or symbols" };
+    return { level: "strong", score, message: "Strong password" };
+  };
 
   const strength = getPasswordStrength(password);
 
@@ -47,15 +41,17 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      setShake(true);
-      setTimeout(() => setShake(false), 400);
-      return;
-    }
+    // Run validations
+    const validations = [
+      validateEmail(email),
+      validatePassword(password),
+      validatePasswordMatch(password, confirmPassword),
+      validateRequiredText(name, "Name"),
+    ];
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+    const failed = validations.find(v => !v.isValid);
+    if (failed) {
+      setError(failed.error ?? "Validation failed");
       setShake(true);
       setTimeout(() => setShake(false), 400);
       return;
@@ -65,7 +61,7 @@ export default function RegisterPage() {
       const userCredential = await register(email, password);
 
       if (userCredential.user) {
-        await updateProfile(userCredential.user, { displayName: name });
+        await updateProfile(userCredential.user, { displayName: name ?? "" });
       }
 
       router.push("/dashboard");
@@ -100,7 +96,7 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value ?? "")}
                 className="px-3 py-2 rounded-md border border-(--color-border) bg-(--color-bg) focus:outline-none focus:ring-2 focus:ring-(--color-primary)"
                 required
               />
@@ -113,7 +109,7 @@ export default function RegisterPage() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value ?? "")}
                 onKeyUp={(e) => setCapsLock(e.getModifierState("CapsLock"))}
                 className="px-3 py-2 rounded-md border border-(--color-border) bg-(--color-bg) focus:outline-none focus:ring-2 focus:ring-(--color-primary)"
                 required
@@ -146,7 +142,7 @@ export default function RegisterPage() {
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => setConfirmPassword(e.target.value ?? "")}
                 onKeyUp={(e) => setCapsLock(e.getModifierState("CapsLock"))}
                 className="px-3 py-2 rounded-md border border-(--color-border) bg-(--color-bg) focus:outline-none focus:ring-2 focus:ring-(--color-primary)"
                 required
@@ -159,7 +155,7 @@ export default function RegisterPage() {
               type="text"
               placeholder="Your name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value ?? "")}
               className="px-3 py-2 rounded-md border border-(--color-border) bg-(--color-bg) focus:outline-none focus:ring-2 focus:ring-(--color-primary)"
               required
             />

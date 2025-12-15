@@ -1,54 +1,34 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useAuth } from "./AuthContext";
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createContext, useContext, ReactNode } from "react";
+import { useIsFavorite as useIsFavoriteHook } from "@/hooks/useFavorites";
 
 interface FavoritesContextType {
-  favorites: string[];
-  addFavorite: (recipeId: string) => Promise<void>;
-  removeFavorite: (recipeId: string) => Promise<void>;
   isFavorite: (recipeId: string) => boolean;
+  toggleFavorite: (recipeId: string) => void;
+  loading: boolean;
 }
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
 export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
-  const [favorites, setFavorites] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchFavorites = async () => {
-      const docRef = doc(db, "favorites", user.uid);
-      const snapshot = await getDoc(docRef);
-      if (snapshot.exists()) setFavorites(snapshot.data().recipeIds || []);
-      else await setDoc(docRef, { recipeIds: [] });
-    };
-
-    fetchFavorites();
-  }, [user]);
-
-  const addFavorite = async (recipeId: string) => {
-    if (!user) return;
-    const docRef = doc(db, "favorites", user.uid);
-    await updateDoc(docRef, { recipeIds: arrayUnion(recipeId) });
-    setFavorites(prev => [...prev, recipeId]);
+  const wrapper = (recipeId: string) => {
+    const { isFavorite, toggle, loading } = useIsFavoriteHook(recipeId);
+    return { isFavorite, toggle, loading };
   };
 
-  const removeFavorite = async (recipeId: string) => {
-    if (!user) return;
-    const docRef = doc(db, "favorites", user.uid);
-    await updateDoc(docRef, { recipeIds: arrayRemove(recipeId) });
-    setFavorites(prev => prev.filter(id => id !== recipeId));
-  };
-
-  const isFavorite = (recipeId: string) => favorites.includes(recipeId);
+  const isFavorite = (recipeId: string) => wrapper(recipeId).isFavorite;
+  const toggleFavorite = (recipeId: string) => wrapper(recipeId).toggle;
+  const loading = false;
 
   return (
-    <FavoritesContext.Provider value={{ favorites, addFavorite, removeFavorite, isFavorite }}>
+    <FavoritesContext.Provider
+      value={{
+        isFavorite,
+        toggleFavorite,
+        loading,
+      }}
+    >
       {children}
     </FavoritesContext.Provider>
   );
