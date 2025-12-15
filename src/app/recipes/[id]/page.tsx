@@ -6,7 +6,7 @@ import { useRecipe } from "@/hooks/useRecipes";
 import { useAuth } from "@/context/AuthContext";
 import { useIsFavorite } from "@/hooks/useFavorites";
 import { RecipeModel } from "@/lib/models/Recipe.model";
-import CommentsRatings from "@/components/CommentsRatings";
+import CommentsRatings from "@/components/Comments/CommentsRatings";
 
 import { RecipeImage } from "@/components/Recipe/RecipeImage";
 import { RecipeNavigation } from "@/components/Recipe/RecipeNavigation";
