@@ -1,96 +1,84 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Recipe, DietaryOption } from "@/types/recipe";
-import RecipeCard from "@/components/RecipeCard";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Recipe } from "@/types/recipe";
 import FilterBar from "@/components/FilterBar";
-import { fetchRecipesPage } from "@/lib/listenRecipesPaginated";
-import { QueryDocumentSnapshot } from "firebase/firestore";
+import { useRecipeFilters } from "@/hooks/useRecipeFilters";
+import { useRecipePagination } from "@/hooks/useRecipePagination";
+import { RecipeGrid } from "@/components/RecipeGrid";
+import { PaginationControls } from "@/components/PaginationControls";
+import { EmptyState } from "@/components/EmptyState";
 
-type SortOption = "az" | "za" | "dateDesc" | "dateAsc";
-
+/**
+ * HomePage - Recipe discovery page
+ * Architecture:
+ * - useRecipeFilters: Manages all filter state
+ * - useRecipePagination: Handles pagination and data fetching
+ * - RecipeGrid: Displays recipes in grid layout
+ * - PaginationControls: Navigation buttons
+ * - EmptyState: No results UI
+ */
 export default function HomePage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const initialSearch = searchParams.get("q")?.toLowerCase() ?? "";
 
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [cursors, setCursors] = useState<Map<number, QueryDocumentSnapshot | null>>(new Map([[1, null]]));
-  const [hasNext, setHasNext] = useState(false);
+  // Filter state management
+  const {
+    filters,
+    setSelectedTag,
+    setDietary,
+    setDifficulty,
+    setMealType,
+    setSortBy,
+    setSearch,
+    resetFilters,
+    activeFiltersCount,
+  } = useRecipeFilters(initialSearch);
 
-  // Filter states
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [dietary, setDietary] = useState<DietaryOption[]>([]);
-  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | null>(null);
-  const [mealType, setMealType] = useState<string>("");
-  const [sortBy, setSortBy] = useState<SortOption>("dateDesc");
-  const search = searchParams.get("q")?.toLowerCase() ?? "";
+  // Pagination and data fetching
+  const {
+    recipes,
+    loading,
+    page,
+    hasNext,
+    goToNextPage,
+    goToPrevPage,
+  } = useRecipePagination(filters.selectedTag, filters.sortBy);
 
-  // Load recipes for a specific page
-const loadPage = useCallback(async (pageNum: number) => {
-  setLoading(true);
-  
-  try {
-    const cursor = cursors.get(pageNum) || null;
-    
-    const { recipes: fetchedRecipes, lastDoc, hasNext: hasNextPage } = await fetchRecipesPage(
-      cursor,
-      selectedTag || undefined,
-      sortBy
-    );
-    
-    setRecipes(fetchedRecipes);
-    setHasNext(hasNextPage);
-    
-    if (lastDoc) {
-      setCursors(prev => new Map(prev).set(pageNum + 1, lastDoc));
-    }
-  } catch (error) {
-    console.error("Error loading recipes:", error);
-  } finally {
-    setLoading(false);
-  }
-}, [cursors, selectedTag, sortBy]);
-
-  // Load page when page number changes
   useEffect(() => {
-    loadPage(page);
-  }, [page]);
+    setSearch(initialSearch);
+  }, [initialSearch, setSearch]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    if (page !== 1) {
-      setPage(1);
-      setCursors(new Map([[1, null]]));
-    } else {
-      loadPage(1);
-    }
-  }, [selectedTag, dietary, difficulty, mealType, sortBy, search]);
-
-  // Client-side filtering and sorting
   const filteredRecipes = recipes
     .filter((recipe) => {
       const matchesSearch =
-        recipe.title.toLowerCase().includes(search) ||
+        recipe.title.toLowerCase().includes(filters.search) ||
         recipe.ingredients.some((i) =>
-          i.name.toLowerCase().includes(search)
+          i.name.toLowerCase().includes(filters.search)
         ) ||
-        recipe.tags.join(" ").toLowerCase().includes(search) ||
-        recipe.steps.some((s) =>
-          s.text.toLowerCase().includes(search)
-        );
+        recipe.tags.join(" ").toLowerCase().includes(filters.search) ||
+        recipe.steps.some((s) => s.text.toLowerCase().includes(filters.search));
 
-      const matchesTag = selectedTag ? recipe.tags.includes(selectedTag) : true;
-      const matchesDietary = dietary.length === 0 || dietary.every((d) => recipe.dietary?.includes(d));
-      const matchesDifficulty = !difficulty || recipe.difficulty === difficulty;
-      const matchesMealType = !mealType || recipe.mealType === mealType;
+      const matchesDietary =
+        filters.dietary.length === 0 ||
+        filters.dietary.every((d) => recipe.dietary?.includes(d));
 
-      return matchesSearch && matchesTag && matchesDietary && matchesDifficulty && matchesMealType;
+      const matchesDifficulty =
+        !filters.difficulty || recipe.difficulty === filters.difficulty;
+
+      const matchesMealType =
+        !filters.mealType || recipe.mealType === filters.mealType;
+
+      return (
+        matchesSearch &&
+        matchesDietary &&
+        matchesDifficulty &&
+        matchesMealType
+      );
     })
     .sort((a, b) => {
-      switch (sortBy) {
+      switch (filters.sortBy) {
         case "az":
           return a.title.localeCompare(b.title);
         case "za":
@@ -104,15 +92,7 @@ const loadPage = useCallback(async (pageNum: number) => {
     });
 
   const handleTagClick = (tag: string) => {
-    setSelectedTag((prev) => (prev === tag ? null : tag));
-  };
-
-  const goToNextPage = () => {
-    if (hasNext) setPage(p => p + 1);
-  };
-
-  const goToPrevPage = () => {
-    if (page > 1) setPage(p => p - 1);
+    setSelectedTag(filters.selectedTag === tag ? null : tag);
   };
 
   return (
@@ -122,64 +102,47 @@ const loadPage = useCallback(async (pageNum: number) => {
       </h1>
 
       <FilterBar
-        dietary={dietary}
+        dietary={filters.dietary}
         setDietary={setDietary}
-        difficulty={difficulty}
+        difficulty={filters.difficulty}
         setDifficulty={setDifficulty}
-        mealType={mealType}
+        mealType={filters.mealType}
         setMealType={setMealType}
-        sortBy={sortBy}
+        sortBy={filters.sortBy}
         setSortBy={setSortBy as any}
       />
 
-      {loading && (
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-(--color-primary) border-t-transparent"></div>
-        </div>
-      )}
-
       {!loading && filteredRecipes.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-6xl mb-4">🔍</div>
-          <p className="text-(--color-text-muted) text-lg">No recipes found.</p>
-          <p className="text-(--color-text-muted) text-sm mt-2">
-            Try adjusting your filters or search terms.
-          </p>
-        </div>
+        <EmptyState
+          icon="🔍"
+          title="No recipes found."
+          message="Try adjusting your filters or search terms."
+          action={
+            activeFiltersCount > 0
+              ? {
+                  label: "Clear Filters",
+                  onClick: resetFilters,
+                }
+              : undefined
+          }
+        />
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {filteredRecipes.map((recipe) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                onTagClick={handleTagClick}
-              />
-            ))}
-          </div>
+          <RecipeGrid
+            recipes={filteredRecipes}
+            loading={loading}
+            onTagClick={handleTagClick}
+          />
 
-          {/* Simple Pagination */}
-          <div className="flex justify-center items-center gap-4 mt-10">
-            <button
-              disabled={page === 1 || loading}
-              onClick={goToPrevPage}
-              className="px-6 py-3 rounded-full border-2 border-(--color-border) bg-(--color-bg-secondary) text-(--color-text) font-semibold transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_var(--color-shadow)]"
-            >
-              ← Previous
-            </button>
-
-            <span className="px-4 py-2 text-(--color-text) font-semibold">
-              Page {page}
-            </span>
-
-            <button
-              disabled={!hasNext || loading}
-              onClick={goToNextPage}
-              className="px-6 py-3 rounded-full border-2 border-(--color-border) bg-(--color-bg-secondary) text-(--color-text) font-semibold transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0_0_var(--color-shadow)]"
-            >
-              Next →
-            </button>
-          </div>
+          {!loading && filteredRecipes.length > 0 && (
+            <PaginationControls
+              currentPage={page}
+              hasNext={hasNext}
+              loading={loading}
+              onPrevious={goToPrevPage}
+              onNext={goToNextPage}
+            />
+          )}
         </>
       )}
     </main>

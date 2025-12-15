@@ -3,15 +3,25 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRecipes } from "@/hooks/useRecipes";
-import RecipeModal from "@/components/RecipeModal";
+import RecipeModal from "@/components/RecipeModal/RecipeModal";
 import RecipeCard from "@/components/RecipeCard";
 import Button from "@/components/Button";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<any | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    recipeId: string | null;
+    recipeName: string;
+  }>({
+    isOpen: false,
+    recipeId: null,
+    recipeName: "",
+  });
 
   const {
     recipes,
@@ -45,14 +55,22 @@ export default function DashboardPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (recipeId: string) => {
-    if (confirm("Are you sure you want to delete this recipe?")) {
-      try {
-        await deleteRecipe(recipeId);
-      } catch (err) {
-        console.error("Failed to delete recipe:", err);
-        alert("Failed to delete recipe. Please try again.");
-      }
+  const handleDelete = (recipeId: string, recipeName: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      recipeId,
+      recipeName,
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmation.recipeId) return;
+
+    try {
+      await deleteRecipe(deleteConfirmation.recipeId);
+    } catch (err) {
+      console.error("Failed to delete recipe:", err);
+      alert("Failed to delete recipe. Please try again.");
     }
   };
 
@@ -130,7 +148,7 @@ export default function DashboardPage() {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(recipe.id!)}
+                    onClick={() => handleDelete(recipe.id!, recipe.title)}
                     className="bg-(--color-danger) text-white px-3 py-1 rounded-full text-sm font-semibold hover:brightness-110"
                   >
                     🗑️
@@ -141,12 +159,26 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Modal */}
+        {/* Recipe Modal */}
         <RecipeModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onSubmit={handleCreateOrUpdate}
           editRecipe={editingRecipe}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteConfirmation.isOpen}
+          onClose={() =>
+            setDeleteConfirmation({ isOpen: false, recipeId: null, recipeName: "" })
+          }
+          onConfirm={confirmDelete}
+          title="Delete Recipe"
+          message={`Are you sure you want to delete "${deleteConfirmation.recipeName}"? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          isDangerous={true}
         />
       </div>
     </ProtectedRoute>

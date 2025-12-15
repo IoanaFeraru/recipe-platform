@@ -2,6 +2,8 @@
 - maybe modularise?
 - Recipe details styling
 - Comment reply profile picture wrong
+- When deleting recipe no more alert, a popup modal or smth!
+- don't allow negative ingredient quantity
 
 - Unit tests for:
   - Recipe creation form validation
