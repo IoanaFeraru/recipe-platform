@@ -5,41 +5,81 @@ import {
   limit,
   startAfter,
   getDocs,
-  QueryDocumentSnapshot
+  QueryDocumentSnapshot,
+  where,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { Recipe } from "@/types/recipe";
+import { Recipe, Ingredient } from "@/types/recipe";
 
 const PAGE_SIZE = 6;
 
 export const fetchRecipesPage = async (
-  cursor: QueryDocumentSnapshot | null
+  cursor: QueryDocumentSnapshot | null,
+  selectedTag?: string,
+  sortBy: "dateDesc" | "dateAsc" | "az" | "za" = "dateDesc"
 ) => {
-  const q = cursor
-    ? query(
-        collection(db, "recipes"),
-        orderBy("createdAt", "desc"),
-        startAfter(cursor),
-        limit(PAGE_SIZE + 1)
-      )
-    : query(
-        collection(db, "recipes"),
-        orderBy("createdAt", "desc"),
-        limit(PAGE_SIZE + 1)
-      );
+  const collectionRef = collection(db, "recipes");
+  const constraints: any[] = [];
 
+  if (selectedTag) {
+    constraints.push(where("tags", "array-contains", selectedTag));
+  }
+
+  constraints.push(orderBy("createdAt", "desc"));
+
+  if (cursor) {
+    constraints.push(startAfter(cursor));
+  }
+
+  constraints.push(limit(PAGE_SIZE + 1));
+
+  const q = query(collectionRef, ...constraints);
   const snapshot = await getDocs(q);
-  const docs = snapshot.docs;
 
+  const docs = snapshot.docs;
   const hasNext = docs.length > PAGE_SIZE;
-  const recipes = docs.slice(0, PAGE_SIZE).map(d => ({
-    id: d.id,
-    ...d.data()
-  })) as Recipe[];
+
+  const recipes: Recipe[] = docs.slice(0, PAGE_SIZE).map((d) => {
+    const data = d.data();
+
+    const ingredients: Ingredient[] = (data.ingredients || []).map(
+      (ing: any) => ({
+        name: typeof ing.name === "string" ? ing.name : ing.name?.name ?? "",
+        quantity: ing.quantity,
+        unit: ing.unit,
+        notes: ing.notes,
+      })
+    );
+
+    return {
+      id: d.id,
+      title: data.title,
+      description: data.description,
+      servings: data.servings ?? 1,
+      ingredients,
+      steps: data.steps ?? [],
+      tags: data.tags ?? [],
+      imageUrl: data.imageUrl,
+      authorId: data.authorId,
+      authorName: data.authorName,
+      authorAvatarUrl: data.authorAvatarUrl,
+      createdAt: data.createdAt,
+      dietary: data.dietary ?? [],
+      minActivePrepTime: data.minActivePrepTime ?? 0,
+      maxActivePrepTime: data.maxActivePrepTime ?? 0,
+      minPassiveTime: data.minPassiveTime ?? 0,
+      maxPassiveTime: data.maxPassiveTime ?? 0,
+      difficulty: data.difficulty,
+      mealType: data.mealType,
+      cuisine: data.cuisine,
+      avgRating: data.avgRating ?? 0,
+      reviewCount: data.reviewCount ?? 0,
+    };
+  });
 
   return {
     recipes,
     lastDoc: hasNext ? docs[PAGE_SIZE - 1] : null,
-    hasNext
+    hasNext,
   };
 };

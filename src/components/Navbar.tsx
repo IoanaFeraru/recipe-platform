@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Button from "./Button";
-// import Image from "next/image"; // remove next/image
+import Image from "next/image";
 import { useTheme } from "@/context/ThemeContext";
 import ThemeToggle from "./ThemeToggle";
 
@@ -34,8 +34,17 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between gap-4 px-6 py-3 bg-(--color-bg-secondary)">
-      <Link href="/" className="flex items-center gap-2 text-(--color-text) text-3xl hover:text-(--color-primary) transition-colors garet-heavy" >
-        <img src={logoSrc} alt="Logo" width={48} height={48} className="h-auto align-middle" />
+      <Link
+        href="/"
+        className="flex items-center gap-2 text-(--color-text) text-3xl hover:text-(--color-primary) transition-colors garet-heavy"
+      >
+        <img
+          src={logoSrc}
+          alt="Logo"
+          width={48}
+          height={48}
+          className="h-auto align-middle"
+        />
         <span className="leading-none">CookHub</span>
       </Link>
 
@@ -52,24 +61,47 @@ export default function Navbar() {
         {user ? (
           <>
             <Link href="/favorites">
-              <Button variant="primary" icon="/fi-sr-heart.svg" iconOnly />
+              <Button variant="primary" iconOnly>
+                <img src="/fi-sr-heart.svg" alt="Favorites" className="w-5 h-5" />
+              </Button>
             </Link>
             <Link href="/dashboard">
-              <Button variant="primary" icon="/books.svg" iconOnly />
+              <Button variant="primary" iconOnly>
+                <img src="/books.svg" alt="Dashboard" className="w-5 h-5" />
+              </Button>
             </Link>
-            <Button variant="danger" onClick={handleLogout} icon="/user-logout.svg" iconOnly />
+            <Link href="/profile">
+              <Button
+                variant="primary"
+                iconOnly
+                className="relative w-10 h-10 p-0 rounded-full flex-none"
+              >
+                <Image
+                  src={user?.photoURL || "/default-profile.svg"}
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                  style={{ borderRadius: '9999px' }}
+                />
+              </Button>
+            </Link>
+            <Button variant="danger" onClick={handleLogout} iconOnly>
+              <img src="/user-logout.svg" alt="Logout" className="w-5 h-5" />
+            </Button>
           </>
         ) : (
           <>
-            <Link href="/login"><Button variant="primary">Log In</Button></Link>
-            <Link href="/register"><Button variant="primary">Register</Button></Link>
+            <Link href="/login">
+              <Button variant="primary">Log In</Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="primary">Register</Button>
+            </Link>
           </>
         )}
 
         <ThemeToggle checked={theme === "dark"} onChange={toggleTheme} />
-        <span className="ml-2 text-sm">
-          {theme === "dark" ? "🌙" : "☀️"}
-        </span>
+        <span className="ml-2 text-sm">{theme === "dark" ? "🌙" : "☀️"}</span>
       </div>
     </nav>
   );
