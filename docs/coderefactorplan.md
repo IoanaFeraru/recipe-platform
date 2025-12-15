@@ -85,7 +85,6 @@ describe("formatTime", () => {
 - [ ] Create reusable Input components
 - [ ] Create reusable Card components
 - [ ] Refractor all components!
-- ⚠️ **Recipe Page** - Partially refactored (needs completion)
 - ⚠️ **Home Page** - Mixed state (needs cleanup)
 - ⚠️ **RecipeModal** - Partially refactored (still has inline logic)
 
