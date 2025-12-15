@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Comment, Rating } from "@/types/comment";
 import { useComments } from "@/hooks/useComments";
+import { Rating } from "@/types/comment";
+import RatingDisplay from "@/components/Comments/RatingDisplay";
+import CommentForm from "@/components/Comments/CommentForm";
+import CommentItem from "@/components/Comments/CommentItem";
+import { fetchUserAvatar } from "@/lib/utils/fetchUserAvatar";
 
 interface CommentsRatingsProps {
   recipeId: string;
@@ -15,9 +19,9 @@ export default function CommentsRatings({
   recipeOwnerId,
 }: CommentsRatingsProps) {
   const { user } = useAuth();
+  const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
 
   const {
-    comments,
     topLevelComments,
     loading,
     error,
@@ -31,195 +35,115 @@ export default function CommentsRatings({
     deleteComment,
     addReply,
     getReplies,
-  } = useComments({ recipeId, recipeOwnerId });
-
-  /* ----------------------------------
-   * Local UI state
-   * ---------------------------------- */
-
-  const [newComment, setNewComment] = useState("");
-  const [replyText, setReplyText] = useState<Record<string, string>>({});
-  const [rating, setRating] = useState<Rating | null>(null);
-  const [hoverRating, setHoverRating] = useState<Rating | null>(null);
-  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>(
-    {}
-  );
+  } = useComments({ recipeId, recipeOwnerId, realtime: true });
 
   const isOwner = user?.uid === recipeOwnerId;
 
-  /* ----------------------------------
-   * Handlers
-   * ---------------------------------- */
-
-  const handleSubmit = async () => {
-    if (!newComment.trim()) return;
-
-    await addComment(newComment, rating);
-    setNewComment("");
-    setRating(null);
-  };
-
-  const handleUpdate = async () => {
-    if (!userExistingRating || !newComment.trim()) return;
-
-    await updateComment(userExistingRating.id, newComment, rating ?? undefined);
-    setNewComment("");
-    setRating(null);
-  };
-
-  const handleReply = async (parentId: string) => {
-    const text = replyText[parentId];
-    if (!text?.trim()) return;
-
-    await addReply(parentId, text);
-    setReplyText((prev) => ({ ...prev, [parentId]: "" }));
-  };
-
-  const toggleReplies = (commentId: string) => {
-    setExpandedReplies((prev) => ({
-      ...prev,
-      [commentId]: !prev[commentId],
-    }));
-  };
-
-  /* ----------------------------------
-   * Helpers
-   * ---------------------------------- */
-
-  const renderStars = (value: number, interactive = false) => (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((i) => {
-        const starValue = i as Rating;
-        return (
-          <button
-            key={i}
-            type="button"
-            disabled={!interactive}
-            onClick={() => interactive && setRating(starValue)}
-            onMouseEnter={() => interactive && setHoverRating(starValue)}
-            onMouseLeave={() => interactive && setHoverRating(null)}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              fill={
-                i <= (interactive ? hoverRating ?? rating ?? 0 : value)
-                  ? "#f59e0b"
-                  : "#d1d5db"
-              }
-            >
-              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-            </svg>
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  const formatDate = (t: any) => {
-    const d = t?.toDate ? t.toDate() : new Date(t);
-    const diffDays = Math.floor(
-      (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)
+  // Fetch user avatars
+  useEffect(() => {
+    const uniqueUserIds = new Set(
+      topLevelComments.map((c) => c.userId)
     );
 
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return d.toLocaleDateString();
+    uniqueUserIds.forEach(async (userId) => {
+      if (!userAvatars[userId]) {
+        const avatarUrl = await fetchUserAvatar(userId);
+        setUserAvatars((prev) => ({ ...prev, [userId]: avatarUrl }));
+      }
+    });
+  }, [topLevelComments]);
+
+  // Handle form submission
+  const handleCommentSubmit = async (text: string, rating: Rating | null) => {
+    if (userHasRated && userExistingRating) {
+      await updateComment(userExistingRating.id, text, rating || undefined);
+    } else {
+      await addComment(text, rating);
+    }
   };
 
-  /* ----------------------------------
-   * Render
-   * ---------------------------------- */
-
+  // Loading state
   if (loading) {
-    return <p className="text-center">Loading comments…</p>;
+    return (
+      <div className="space-y-8">
+        <h2 className="text-3xl font-bold garet-heavy text-(--color-text)">
+          Reviews & Comments
+        </h2>
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-(--color-primary) border-t-transparent"></div>
+          <p className="mt-4 text-(--color-text-muted)">Loading comments...</p>
+        </div>
+      </div>
+    );
   }
 
+  // Error state
   if (error) {
-    return <p className="text-center text-red-500">{error.message}</p>;
+    return (
+      <div className="space-y-8">
+        <h2 className="text-3xl font-bold garet-heavy text-(--color-text)">
+          Reviews & Comments
+        </h2>
+        <div className="bg-red-100 border-2 border-red-400 rounded-xl p-6 text-center">
+          <p className="text-red-700">Failed to load comments. Please try again.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-bold">Reviews & Comments</h2>
+      <h2 className="text-3xl font-bold garet-heavy text-(--color-text)">
+        Reviews & Comments
+      </h2>
 
+      {/* Average Rating Display */}
       {totalRatings > 0 && (
-        <div className="flex gap-6 items-center">
-          <div className="text-5xl font-bold">
-            {averageRating.toFixed(1)}
-            <div>{renderStars(Math.round(averageRating))}</div>
-          </div>
-          <p>{totalRatings} reviews</p>
+        <RatingDisplay averageRating={averageRating} totalRatings={totalRatings} />
+      )}
+
+      {/* Comment Form (only for logged-in users) */}
+      {user ? (
+        <CommentForm
+          onSubmit={handleCommentSubmit}
+          isOwner={isOwner}
+          userHasRated={userHasRated}
+          isSubmitting={isSubmitting}
+          initialText={userExistingRating?.text}
+          initialRating={userExistingRating?.rating || null}
+        />
+      ) : (
+        <div className="bg-(--color-bg-secondary) border-2 border-(--color-border) rounded-2xl p-6 text-center">
+          <p className="text-(--color-text-muted)">
+            Please log in to leave a review or comment
+          </p>
         </div>
       )}
 
-      {user && (
+      {/* Comments List */}
+      {topLevelComments.length === 0 ? (
+        <div className="text-center py-12 bg-(--color-bg-secondary) border-2 border-(--color-border) rounded-2xl">
+          <div className="text-5xl mb-4">💬</div>
+          <p className="text-(--color-text-muted)">
+            No reviews yet. Be the first to review this recipe!
+          </p>
+        </div>
+      ) : (
         <div className="space-y-4">
-          {!isOwner && (
-            <div>
-              <label>Your rating</label>
-              {renderStars(rating ?? 0, true)}
-            </div>
-          )}
-
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={
-              userHasRated ? "Update your review…" : "Write a comment…"
-            }
-          />
-
-          <button
-            disabled={isSubmitting}
-            onClick={userHasRated ? handleUpdate : handleSubmit}
-          >
-            {userHasRated ? "Update Review" : "Post Comment"}
-          </button>
+          {topLevelComments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              replies={getReplies(comment.id)}
+              currentUserId={user?.uid}
+              recipeOwnerId={recipeOwnerId}
+              onDelete={deleteComment}
+              onReply={addReply}
+              userAvatars={userAvatars}
+            />
+          ))}
         </div>
       )}
-
-      {topLevelComments.map((c) => {
-        const replies = getReplies(c.id);
-        const expanded = expandedReplies[c.id];
-
-        return (
-          <div key={c.id} className="border rounded p-4">
-            <p>{c.userEmail}</p>
-            <p>{formatDate(c.createdAt)}</p>
-            {c.rating && renderStars(c.rating)}
-            <p>{c.text}</p>
-
-            <button onClick={() => toggleReplies(c.id)}>
-              Reply ({replies.length})
-            </button>
-
-            {expanded && (
-              <div className="ml-6 space-y-2">
-                <textarea
-                  value={replyText[c.id] || ""}
-                  onChange={(e) =>
-                    setReplyText((prev) => ({
-                      ...prev,
-                      [c.id]: e.target.value,
-                    }))
-                  }
-                />
-                <button onClick={() => handleReply(c.id)}>Reply</button>
-
-                {replies.map((r) => (
-                  <div key={r.id}>
-                    <p>{r.userEmail}</p>
-                    <p>{r.text}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 }

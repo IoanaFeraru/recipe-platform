@@ -4,7 +4,6 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext"; 
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { FavoritesProvider } from "@/context/FavoritesContext";
 import ScrollToTop from "@/components/ScrollToTop";
 
 const geistSans = Geist({
@@ -37,10 +36,8 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider>
-            <FavoritesProvider>
               <Navbar />
               {children}
-            </FavoritesProvider>
           </ThemeProvider>
         </AuthProvider>
         <ScrollToTop />

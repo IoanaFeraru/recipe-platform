@@ -1,5 +1,7 @@
 - recipe creation validation!
 - maybe modularise?
+- Recipe details styling
+- Comment reply profile picture wrong
 
 - Unit tests for:
   - Recipe creation form validation

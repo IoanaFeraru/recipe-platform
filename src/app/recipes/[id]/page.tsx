@@ -77,7 +77,7 @@ export default function RecipePage() {
       )}
 
       <div className="max-w-6xl mx-auto px-8 -mt-20 relative">
-        <div className="bg-(--color-bg) border-2 rounded-3xl p-8 mb-8">
+        <div className="bg-(--color-bg-secondary) rounded-3xl p-8 mb-8">
           <h1 className="text-5xl font-bold mb-4">{recipeModel.title}</h1>
 
           {/* Creator */}
