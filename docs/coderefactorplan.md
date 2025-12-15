@@ -1,36 +1,3 @@
-### 2. **Component Composition**
-
-Break large components into smaller, focused ones:
-
-```typescript
-// RecipeCard.tsx
-<RecipeCard>
-  <RecipeImage />
-  <RecipeHeader />
-  <RecipeStats />
-  <RecipeDietaryBadges />
-  <RecipeTags />
-</RecipeCard>
-```
-
-## 🎨 Design Patterns to Implement
-
-1. **Repository Pattern**: Abstract data access
-2. **Factory Pattern**: Create complex objects (Recipe, Comment)
-3. **Observer Pattern**: Already using (React state, Firestore listeners)
-4. **Composition**: Build complex UIs from simple components
-5. **Dependency Injection**: Pass services to components via context
-
----
-
-## 📝 Implementation Priority
-
-### Phase 1: Core Infrastructure
-1. ✅ Create service classes (RecipeService, CommentService, etc.)
-2. ✅ Extract utility functions
-3. ✅ Create custom hooks
-4. ✅ Define clear types and interfaces
-
 ### Phase 2: Component Refactoring
 1. [ ] Break down large components
 2. [ ] Extract reusable UI components
@@ -45,115 +12,13 @@ Break large components into smaller, focused ones:
 ## 📋 Phase 2: Create Utility Functions (Functional)
 
 #### C. sorting.ts
-```typescript
-// src/lib/utils/sorting.ts
-export const sortByDate = (a: Recipe, b: Recipe): number => { ... }
-export const sortByTitle = (a: Recipe, b: Recipe): number => { ... }
-export const sortByRating = (a: Recipe, b: Recipe): number => { ... }
-```
-
 
 ## 📋 Phase 4: Component Refactoring
 
 ### Step 1: Break Down Large Components
-
-#### Before: RecipeModal (400+ lines)
-```typescript
-// Single massive component with all logic
-export default function RecipeModal({ ... }) {
-  // 400+ lines of state, handlers, JSX
-}
-```
-
-#### After: Modular Structure
-```typescript
-// RecipeModal.tsx (orchestrator)
-export default function RecipeModal({ ... }) {
-  const form = useRecipeForm(editRecipe);
-  const { uploadImage } = useImageUpload();
-  
-  return <RecipeModalLayout>
-    <RecipeBasicInfo form={form} />
-    <RecipeIngredients form={form} />
-    <RecipeSteps form={form} />
-    <RecipeMetadata form={form} />
-  </RecipeModalLayout>
-}
-
-// RecipeBasicInfo.tsx (40 lines)
-// RecipeIngredients.tsx (60 lines)
-// RecipeSteps.tsx (80 lines)
-// RecipeMetadata.tsx (50 lines)
-```
-
 ### Step 2: Create Reusable Components
 
-```
-src/components/
-├── common/
-│   ├── Button/
-│   ├── Input/
-│   ├── Select/
-│   ├── Modal/
-│   └── Card/
-├── forms/
-│   ├── IngredientInput/
-│   ├── StepInput/
-│   └── TimeInput/
-└── features/
-    ├── recipe/
-    │   ├── RecipeCard/
-    │   ├── RecipeHeader/
-    │   ├── RecipeStats/
-    │   └── RecipeImage/
-    └── comments/
-        ├── CommentList/
-        ├── CommentItem/
-        └── CommentForm/
-```
-
 ## 📋 Phase 5: Update Existing Components
-
-### Example: Refactor src/app/page.tsx
-
-#### Before (300+ lines with mixed concerns)
-```typescript
-export default function HomePage() {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(false);
-  // ... 50+ lines of state
-  
-  useEffect(() => {
-    // Complex fetch logic
-  }, [many, dependencies]);
-  
-  const filteredRecipes = recipes.filter(...).sort(...);
-  
-  // ... 200+ lines of JSX
-}
-```
-
-#### After (Clean and focused)
-```typescript
-export default function HomePage() {
-  const searchParams = useSearchParams();
-  const search = searchParams.get("q") ?? "";
-  
-  // Use custom hooks for data
-  const { recipes, loading } = useRecipes({ search }, true);
-  
-  // Use custom hooks for filters
-  const { filters, updateFilter } = useRecipeFilters();
-  
-  // Pure function for client-side filtering
-  const filteredRecipes = useMemo(
-    () => applyFilters(recipes, filters),
-    [recipes, filters]
-  );
-  
-  return <RecipeGrid recipes={filteredRecipes} loading={loading} />;
-}
-```
 
 ## 📋 Phase 6: Type Definitions
 
@@ -217,10 +82,12 @@ describe("formatTime", () => {
 
 ### Phase 3: Components
 - [ ] Refactor RecipeModal (break into smaller components)
-- [ ] Refactor HomePage
 - [ ] Create reusable Input components
 - [ ] Create reusable Card components
 - [ ] Refractor all components!
+- ⚠️ **Recipe Page** - Partially refactored (needs completion)
+- ⚠️ **Home Page** - Mixed state (needs cleanup)
+- ⚠️ **RecipeModal** - Partially refactored (still has inline logic)
 
 ### Phase 4: Testing
 - [ ] Add service tests
@@ -259,3 +126,77 @@ const processedRecipes = useMemo(
   () => sortRecipes(applyRecipeFilters(recipes, filters), sortBy),
   [recipes, filters, sortBy]
 );
+
+#### Fix 2: Complete Recipe Page
+- Fix recipe styling
+
+#### Fix 3: Polish CommentsRatings UI
+- Add proper styling
+- Create StarRating component
+- Add user avatar display
+- Better reply UI
+---
+
+## 📋 Detailed Next Steps
+
+### **Step 3: Refactor RecipeModal (45 min)**
+
+Break into sub-components:
+1. **RecipeBasicInfo.tsx** - Title, description, servings
+2. **RecipeMetadata.tsx** - Difficulty, meal type, dietary
+3. **RecipeTimeInput.tsx** - Time management
+4. **IngredientInput.tsx** - Ingredient management
+5. **StepInput.tsx** - Step management
+6. **RecipeImageUpload.tsx** - Image upload
+
+Use `useRecipeForm` hook throughout.
+
+### **Step 4: Complete Recipe Page (30 min)**
+
+Extract components:
+1. **RecipeHeader.tsx** - Title, creator, favorite button
+2. **RecipeStats.tsx** - Servings, time, stats
+3. **IngredientList.tsx** - Ingredients with scaling
+4. **StepList.tsx** - Instructions
+5. **RecipeInfo.tsx** - Description, tags, dietary
+
+### **Step 5: Cleanup Home Page (20 min)**
+
+- Use `useRecipes` hook
+- Extract pagination to custom hook
+- Simplify filtering logic
+
+---
+
+## 📊 Current Status
+
+| Component | Status | Priority |
+|-----------|--------|----------|
+| Recipe Page | ⚠️ 70% | **HIGH** |
+| CommentsRatings | ⚠️ 60% | **HIGH** |
+| RecipeModal | ⚠️ 40% | **MEDIUM** |
+| Home Page | ⚠️ 50% | **MEDIUM** |
+| FavoritesContext | ❌ Broken | **CRITICAL** |
+
+---
+
+## 🎯 What to Do Next (In Order)
+
+3. **[HIGH]** Complete Recipe Page - Extract sub-components
+4. **[MEDIUM]** Refactor RecipeModal - Use hooks and sub-components
+5. **[MEDIUM]** Refactor Home Page - Use hooks
+---
+
+### What Needs Improvement:
+3. ⚠️ **RecipeModal** - Still too large, needs extraction
+4. ⚠️ **Home Page** - Not using the hooks we created
+
+---
+## 📈 Progress Metrics
+
+- **Overall Progress:** 75% ✅
+- **Infrastructure:** 100% ✅
+- **Pages:** 60% ⚠️
+- **Components:** 65% ⚠️
+
+**Estimated Time to Complete:** 2-3 hours
