@@ -5,11 +5,12 @@ import { useUserRecipes } from "@/hooks/useRecipes";
 import RecipeModal from "@/components/RecipeModal/RecipeModal";
 import Button from "@/components/Button";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import ConfirmationModal from "@/components/ConfirmationModal";
+import { ConfirmationModal } from "@/components/UI";
 import { useRecipeActions } from "@/hooks/useRecipeActions";
 import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
 import { EmptyDashboard } from "@/components/Dashboard/EmptyDashboard";
 import { RecipeGridWithActions } from "@/components/Dashboard/RecipeGridWithActions";
+import { PageErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -73,49 +74,51 @@ export default function DashboardPage() {
   }
 
   return (
-    <ProtectedRoute>
-      <div className="p-8 max-w-7xl mx-auto">
-        {/* Header */}
-        <DashboardHeader onCreateClick={openCreateModal} />
+    <PageErrorBoundary>
+      <ProtectedRoute>
+        <div className="p-8 max-w-7xl mx-auto">
+          {/* Header */}
+          <DashboardHeader onCreateClick={openCreateModal} />
 
-        {/* Content: Empty State or Recipe Grid */}
-        {recipes.length === 0 ? (
-          <EmptyDashboard onCreateClick={openCreateModal} />
-        ) : (
-          <RecipeGridWithActions
-            recipes={recipes}
-            onEdit={openEditModal}
-            onDelete={openDeleteConfirmation}
+          {/* Content: Empty State or Recipe Grid */}
+          {recipes.length === 0 ? (
+            <EmptyDashboard onCreateClick={openCreateModal} />
+          ) : (
+            <RecipeGridWithActions
+              recipes={recipes}
+              onEdit={openEditModal}
+              onDelete={openDeleteConfirmation}
+            />
+          )}
+
+          {/* Recipe Modal */}
+          <RecipeModal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            onSubmit={handleCreateOrUpdate}
+            editRecipe={editingRecipe}
           />
-        )}
 
-        {/* Recipe Modal */}
-        <RecipeModal
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          onSubmit={handleCreateOrUpdate}
-          editRecipe={editingRecipe}
-        />
+          {/* Delete Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={deleteConfirmation.isOpen}
+            onClose={closeDeleteConfirmation}
+            onConfirm={handleDelete}
+            title="Delete Recipe"
+            message={`Are you sure you want to delete "${deleteConfirmation.recipeName}"? This action cannot be undone.`}
+            confirmText="Delete"
+            cancelText="Cancel"
+            isDangerous={true}
+          />
 
-        {/* Delete Confirmation Modal */}
-        <ConfirmationModal
-          isOpen={deleteConfirmation.isOpen}
-          onClose={closeDeleteConfirmation}
-          onConfirm={handleDelete}
-          title="Delete Recipe"
-          message={`Are you sure you want to delete "${deleteConfirmation.recipeName}"? This action cannot be undone.`}
-          confirmText="Delete"
-          cancelText="Cancel"
-          isDangerous={true}
-        />
-
-        {/* Error Display */}
-        {actionError && (
-          <div className="fixed bottom-8 right-8 bg-red-100 border-2 border-red-400 rounded-lg p-4 shadow-lg">
-            <p className="text-red-700 text-sm">{actionError}</p>
-          </div>
-        )}
-      </div>
-    </ProtectedRoute>
+          {/* Error Display */}
+          {actionError && (
+            <div className="fixed bottom-8 right-8 bg-red-100 border-2 border-red-400 rounded-lg p-4 shadow-lg">
+              <p className="text-red-700 text-sm">{actionError}</p>
+            </div>
+          )}
+        </div>
+      </ProtectedRoute>
+    </PageErrorBoundary>
   );
 }

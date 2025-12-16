@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useComments } from "@/hooks/useComments";
 import { Rating } from "@/types/comment";
 import { fetchUserAvatar } from "@/lib/utils/fetchUserAvatar";
+import { ComponentErrorBoundary } from "@/components/ErrorBoundary";
 
 import { CommentsSection } from "./CommentsSection";
 import CommentForm from "./CommentForm";
@@ -93,41 +94,43 @@ export default function CommentsRatings({
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header & Rating Display */}
-      <CommentsSection
-        totalRatings={totalRatings}
-        averageRating={averageRating}
-      />
-
-      {/* Comment Form */}
-      {user ? (
-        <CommentForm
-          onSubmit={handleCommentSubmit}
-          isOwner={isOwner}
-          userHasRated={userHasRated}
-          isSubmitting={isSubmitting}
-          initialText={userExistingRating?.text}
-          initialRating={userExistingRating?.rating || null}
+    <ComponentErrorBoundary componentName="CommentsRatings">
+      <div className="space-y-8">
+        {/* Header & Rating Display */}
+        <CommentsSection
+          totalRatings={totalRatings}
+          averageRating={averageRating}
         />
-      ) : (
-        <div className="bg-(--color-bg-secondary) border-2 border-(--color-border) rounded-2xl p-6 text-center">
-          <p className="text-(--color-text-muted)">
-            Please log in to leave a review or comment
-          </p>
-        </div>
-      )}
 
-      {/* Comments List */}
-      <CommentsList
-        comments={topLevelComments}
-        currentUserId={user?.uid}
-        recipeOwnerId={recipeOwnerId}
-        onDelete={deleteComment}
-        onReply={addReply}
-        getReplies={getReplies}
-        userAvatars={userAvatars}
-      />
-    </div>
+        {/* Comment Form */}
+        {user ? (
+          <CommentForm
+            onSubmit={handleCommentSubmit}
+            isOwner={isOwner}
+            userHasRated={userHasRated}
+            isSubmitting={isSubmitting}
+            initialText={userExistingRating?.text}
+            initialRating={userExistingRating?.rating || null}
+          />
+        ) : (
+          <div className="bg-(--color-bg-secondary) border-2 border-(--color-border) rounded-2xl p-6 text-center">
+            <p className="text-(--color-text-muted)">
+              Please log in to leave a review or comment
+            </p>
+          </div>
+        )}
+
+        {/* Comments List */}
+        <CommentsList
+          comments={topLevelComments}
+          currentUserId={user?.uid}
+          recipeOwnerId={recipeOwnerId}
+          onDelete={deleteComment}
+          onReply={addReply}
+          getReplies={getReplies}
+          userAvatars={userAvatars}
+        />
+      </div>
+    </ComponentErrorBoundary>
   );
 }

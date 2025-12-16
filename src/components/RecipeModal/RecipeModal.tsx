@@ -6,6 +6,7 @@ import { storage } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
 import { validateImageFile } from "@/lib/imageValidation";
 import { useRecipeValidation } from "@/hooks/useRecipeValidation";
+import { ComponentErrorBoundary } from "@/components/ErrorBoundary";
 import { RecipeModalHeader } from "./RecipeModalHeader";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { DietaryOptionsSelector } from "./DietaryOptionsSelector";
@@ -345,8 +346,9 @@ export default function RecipeModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 p-4">
-      <div className="bg-(--color-bg) rounded-l-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[8px_8px_0_0_var(--color-shadow)]">
+    <ComponentErrorBoundary componentName="RecipeModal">
+      <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 p-4">
+        <div className="bg-(--color-bg) rounded-l-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[8px_8px_0_0_var(--color-shadow)]">
         {/* Header */}
         <RecipeModalHeader
           isEditing={!!editRecipe}
@@ -490,5 +492,6 @@ export default function RecipeModal({
         </div>
       </div>
     </div>
+    </ComponentErrorBoundary>
   );
 }

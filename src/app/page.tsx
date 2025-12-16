@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Recipe } from "@/types/recipe";
 import FilterBar from "@/components/FilterBar/FilterBar";
 import { useRecipeFilters } from "@/hooks/useRecipeFilters";
 import { useRecipePagination } from "@/hooks/useRecipePagination";
 import { RecipeGrid } from "@/components/RecipeGrid";
 import { PaginationControls } from "@/components/PaginationControls";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/components/UI";
+import { PageErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
  * HomePage - Recipe discovery page
@@ -96,55 +96,57 @@ export default function HomePage() {
   };
 
   return (
-    <main className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8 text-(--color-text) garet-heavy">
-        Discover Recipes
-      </h1>
+    <PageErrorBoundary>
+      <main className="p-8 max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-(--color-text) garet-heavy">
+          Discover Recipes
+        </h1>
 
-      <FilterBar
-        dietary={filters.dietary}
-        setDietary={setDietary}
-        difficulty={filters.difficulty}
-        setDifficulty={setDifficulty}
-        mealType={filters.mealType}
-        setMealType={setMealType}
-        sortBy={filters.sortBy}
-        setSortBy={setSortBy as any}
-      />
-
-      {!loading && filteredRecipes.length === 0 ? (
-        <EmptyState
-          icon="🔍"
-          title="No recipes found."
-          message="Try adjusting your filters or search terms."
-          action={
-            activeFiltersCount > 0
-              ? {
-                  label: "Clear Filters",
-                  onClick: resetFilters,
-                }
-              : undefined
-          }
+        <FilterBar
+          dietary={filters.dietary}
+          setDietary={setDietary}
+          difficulty={filters.difficulty}
+          setDifficulty={setDifficulty}
+          mealType={filters.mealType}
+          setMealType={setMealType}
+          sortBy={filters.sortBy}
+          setSortBy={setSortBy as any}
         />
-      ) : (
-        <>
-          <RecipeGrid
-            recipes={filteredRecipes}
-            loading={loading}
-            onTagClick={handleTagClick}
-          />
 
-          {!loading && filteredRecipes.length > 0 && (
-            <PaginationControls
-              currentPage={page}
-              hasNext={hasNext}
+        {!loading && filteredRecipes.length === 0 ? (
+          <EmptyState
+            icon="🔍"
+            title="No recipes found."
+            message="Try adjusting your filters or search terms."
+            action={
+              activeFiltersCount > 0
+                ? {
+                    label: "Clear Filters",
+                    onClick: resetFilters,
+                  }
+                : undefined
+            }
+          />
+        ) : (
+          <>
+            <RecipeGrid
+              recipes={filteredRecipes}
               loading={loading}
-              onPrevious={goToPrevPage}
-              onNext={goToNextPage}
+              onTagClick={handleTagClick}
             />
-          )}
-        </>
-      )}
-    </main>
+
+            {!loading && filteredRecipes.length > 0 && (
+              <PaginationControls
+                currentPage={page}
+                hasNext={hasNext}
+                loading={loading}
+                onPrevious={goToPrevPage}
+                onNext={goToNextPage}
+              />
+            )}
+          </>
+        )}
+      </main>
+    </PageErrorBoundary>
   );
 }

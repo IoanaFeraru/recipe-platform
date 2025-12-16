@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/components/UI/EmptyState";
 
 interface EmptyDashboardProps {
   onCreateClick: () => void;

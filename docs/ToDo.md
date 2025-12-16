@@ -1,7 +1,5 @@
-- Modularisation
-- Comment reply profile picture wrong
-- When deleting recipe no more alert, a popup modal or smth!
-- don't allow negative ingredient quantity
+- after clear all (favourites) auto refresh
+- apply/use error boundary
 
 - Unit tests for:
   - Recipe creation form validation
