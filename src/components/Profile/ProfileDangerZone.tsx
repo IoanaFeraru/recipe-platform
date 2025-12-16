@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Button from "@/components/Button";
+import Button from "@/components/UI/Button";
 import ConfirmationModal from "@/components/UI/ConfirmationModal";
 
 interface ProfileDangerZoneProps {

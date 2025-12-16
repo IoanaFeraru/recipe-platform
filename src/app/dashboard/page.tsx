@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useUserRecipes } from "@/hooks/useRecipes";
 import RecipeModal from "@/components/RecipeModal/RecipeModal";
-import Button from "@/components/Button";
+import Button from "@/components/UI/Button";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ConfirmationModal } from "@/components/UI";
 import { useRecipeActions } from "@/hooks/useRecipeActions";

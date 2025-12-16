@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation";
 import FilterBar from "@/components/FilterBar/FilterBar";
 import { useRecipeFilters } from "@/hooks/useRecipeFilters";
 import { useRecipePagination } from "@/hooks/useRecipePagination";
-import { RecipeGrid } from "@/components/RecipeGrid";
-import { PaginationControls } from "@/components/PaginationControls";
+import { RecipeGrid } from "@/components/Recipe/RecipeGrid";
+import { PaginationControls } from "@/components/UI/PaginationControls";
 import { EmptyState } from "@/components/UI";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
 

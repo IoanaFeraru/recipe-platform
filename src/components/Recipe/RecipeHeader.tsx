@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import Button from "@/components/Button";
+import Button from "@/components/UI/Button";
 
 interface RecipeHeaderProps {
   title: string;

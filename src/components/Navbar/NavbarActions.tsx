@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import Button from "../Button";
+import Button from "../UI/Button";
 import ThemeToggle from "../ThemeToggle";
 import type { User } from "firebase/auth";
 

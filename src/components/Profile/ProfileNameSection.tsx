@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Button from "@/components/Button";
+import Button from "@/components/UI/Button";
 
 interface ProfileMessage {
   type: "success" | "error";

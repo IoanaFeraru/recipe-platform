@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Button from "@/components/Button";
+import Button from "@/components/UI/Button";
 import { AuthCard, AuthMotion, FormField, PasswordField } from "@/components/Auth";
 import { useLoginForm } from "@/hooks/useLoginForm";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";

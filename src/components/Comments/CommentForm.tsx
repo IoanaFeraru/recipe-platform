@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Rating } from "@/types/comment";
 import StarRating from "./StarRating";
-import Button from "@/components/Button";
+import Button from "@/components/UI/Button";
 
 interface CommentFormProps {
   onSubmit: (text: string, rating: Rating | null) => Promise<void>;

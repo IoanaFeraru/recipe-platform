@@ -4,7 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar/Navbar";
 import { ThemeProvider } from "@/context/ThemeContext";
-import ScrollToTop from "@/components/ScrollToTop";
+import ScrollToTop from "@/components/UI/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const geistSans = Geist({

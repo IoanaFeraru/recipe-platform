@@ -2,7 +2,7 @@
 
 import React, { ReactNode } from "react";
 import { ErrorBoundary } from "./ErrorBoundary";
-import Button from "@/components/Button";
+import Button from "@/components/UI/Button";
 
 interface PageErrorBoundaryProps {
   children: ReactNode;
