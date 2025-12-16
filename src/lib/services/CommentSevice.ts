@@ -106,11 +106,9 @@ export class CommentService {
    */
   async delete(id: string): Promise<void> {
     try {
-      // First, delete all replies to this comment
       const replies = await this.getReplies(id);
       await Promise.all(replies.map((reply) => this.delete(reply.id)));
 
-      // Then delete the comment itself
       const docRef = doc(db, this.collectionName, id);
       await deleteDoc(docRef);
     } catch (error) {
@@ -151,7 +149,6 @@ export class CommentService {
     try {
       const allComments = await this.getByRecipe(recipeId);
 
-      // Filter: only top-level comments with ratings, excluding owner
       const ratingsComments = allComments.filter(
         (c) => c.rating && !c.parentCommentId && c.userId !== recipeOwnerId
       );
@@ -167,7 +164,6 @@ export class CommentService {
         avgRating = totalRating / reviewCount;
       }
 
-      // Update the recipe document with new stats
       const recipeRef = doc(db, "recipes", recipeId);
       await updateDoc(recipeRef, {
         avgRating,

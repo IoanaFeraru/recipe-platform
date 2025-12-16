@@ -1,9 +1,5 @@
 # CookHub Codebase Refactoring Plan
-
 ### Issues 🔴
-
-**Critical:**
-6. CommentsRatings (150+ lines)
 
 **Moderate:**
 1. Navbar (90+ lines)
@@ -16,28 +12,6 @@
 12. No loading state components (reused inline)
 13. Inconsistent prop drilling vs context usage
 14. Mixed validation patterns (inline vs utils)
-
-### CHECKPOINT 2.3: CommentsRatings Decomposition
-**Target LOC Reduction: 150 → 80 (47% reduction)**
-
-**New Structure:**
-```
-components/CommentsRatings/
-├── CommentsRatings.tsx (Orchestrator, 80 lines)
-├── CommentsSection.tsx (40 lines)
-├── CommentsList.tsx (30 lines)
-└── index.ts
-```
-
-**Actions:**
-- [ ] Create CommentsSection component (header + rating display)
-- [ ] Create CommentsList component (list rendering)
-- [ ] Refactor main component to orchestrate
-- [ ] Test real-time updates
-- [ ] Test comment submission
-- [ ] Test rating updates
-
----
 
 ### CHECKPOINT 2.4: Navbar Refactoring
 **Target LOC Reduction: 90 → 60 (33% reduction)**
