@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * Button component.
+ *
+ * Provides a reusable, styled button abstraction aligned with the application’s
+ * design system. It supports primary and destructive (danger) variants and an
+ * optional icon-only mode for compact, square buttons used in toolbars or
+ * action icons.
+ *
+ * Styling and behavior are centralized to ensure visual consistency and to
+ * reduce duplication across the UI layer.
+ */
+
 import React, { ButtonHTMLAttributes, ReactNode } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -30,11 +42,11 @@ export default function Button({
       ? "bg-[var(--color-primary)] text-white"
       : "bg-[var(--color-danger)] text-white";
 
-  const iconSizeClasses = iconOnly ? "w-10 h-10 p-0" : "px-4 py-2";
+  const sizeClasses = iconOnly ? "w-10 h-10 p-0" : "px-4 py-2";
 
   return (
     <button
-      className={`${baseClasses} ${variantClasses} ${iconSizeClasses} ${className}`}
+      className={`${baseClasses} ${variantClasses} ${sizeClasses} ${className}`}
       {...props}
     >
       {children}

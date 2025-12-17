@@ -10,37 +10,51 @@ import {
   orderBy,
   onSnapshot,
   Unsubscribe,
-  Timestamp,
+  Timestamp
 } from "firebase/firestore";
 import { db } from "../firebase";
-import { Comment, CommentStats, Rating, RatingDistribution } from "@/types/comment";
-
+import {
+  Comment,
+  CommentStats,
+  Rating,
+  RatingDistribution
+} from "@/types/comment";
 
 /**
- * CommentService - Encapsulates all comment-related operations
- * Handles comments, replies, and rating calculations
+ * Comment and review persistence service.
+ *
+ * Owns Firestore access for:
+ * - creating/updating/deleting comments and replies
+ * - realtime subscriptions per recipe
+ * - computing lightweight stats from an in-memory comments array
+ * - recomputing denormalized recipe rating fields (avgRating, reviewCount)
+ *
+ * Notes on model assumptions:
+ * - Replies are identified via parentCommentId and do not meaningfully contribute to rating.
+ * - Ratings are user-provided on top-level comments; recipe owner ratings are excluded.
+ * - "One rating per user per recipe" is enforced by application logic.
  */
 export class CommentService {
   private readonly collectionName = "comments";
   private readonly collectionRef = collection(db, this.collectionName);
 
   /**
-   * Create a new comment or reply
+   * Creates a comment or reply and sets createdAt.
    */
   async create(commentData: Omit<Comment, "id">): Promise<string> {
     try {
       const docRef = await addDoc(this.collectionRef, {
         ...commentData,
-        createdAt: Timestamp.now(),
+        createdAt: Timestamp.now()
       });
       return docRef.id;
     } catch (error) {
-      throw new Error(`Failed to create comment: ${error}`);
+      throw new Error(`Failed to create comment: ${String(error)}`);
     }
   }
 
   /**
-   * Get all comments for a specific recipe
+   * Returns all comments (top-level and replies) for a recipe, newest first.
    */
   async getByRecipe(recipeId: string): Promise<Comment[]> {
     try {
@@ -51,18 +65,15 @@ export class CommentService {
       );
 
       const snapshot = await getDocs(q);
-
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Comment[];
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Comment[];
     } catch (error) {
-      throw new Error(`Failed to fetch comments: ${error}`);
+      throw new Error(`Failed to fetch comments: ${String(error)}`);
     }
   }
 
   /**
-   * Listen to real-time comment updates for a recipe
+   * Subscribes to all comments for a recipe (top-level + replies).
+   * Caller must invoke the returned unsubscribe function.
    */
   listenToRecipeComments(
     recipeId: string,
@@ -76,48 +87,50 @@ export class CommentService {
 
     return onSnapshot(
       q,
-      (snapshot) => {
-        const comments = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Comment[];
+      snapshot => {
+        const comments = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Comment[];
         callback(comments);
       },
-      (error) => {
+      error => {
+        // Listener errors should not crash UI; log and keep last known state.
         console.error("Error listening to comments:", error);
       }
     );
   }
 
   /**
-   * Update an existing comment
+   * Applies a partial update to a comment. If a rating is changed, caller should
+   * recompute recipe rating stats via updateRecipeRating().
    */
   async update(id: string, data: Partial<Comment>): Promise<void> {
     try {
       const docRef = doc(db, this.collectionName, id);
       await updateDoc(docRef, data);
     } catch (error) {
-      throw new Error(`Failed to update comment: ${error}`);
+      throw new Error(`Failed to update comment: ${String(error)}`);
     }
   }
 
   /**
-   * Delete a comment and all its replies
+   * Cascading delete: removes a comment and all replies beneath it.
+   *
+   * Note: This is implemented recursively with multiple reads/writes. For large
+   * threads consider moving deletion to a backend job / Cloud Function.
    */
   async delete(id: string): Promise<void> {
     try {
       const replies = await this.getReplies(id);
-      await Promise.all(replies.map((reply) => this.delete(reply.id)));
+      await Promise.all(replies.map(reply => this.delete(reply.id)));
 
       const docRef = doc(db, this.collectionName, id);
       await deleteDoc(docRef);
     } catch (error) {
-      throw new Error(`Failed to delete comment: ${error}`);
+      throw new Error(`Failed to delete comment: ${String(error)}`);
     }
   }
 
   /**
-   * Get all replies for a specific comment
+   * Returns direct replies for a parent comment, oldest first.
    */
   async getReplies(parentCommentId: string): Promise<Comment[]> {
     try {
@@ -128,19 +141,19 @@ export class CommentService {
       );
 
       const snapshot = await getDocs(q);
-
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Comment[];
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Comment[];
     } catch (error) {
-      throw new Error(`Failed to fetch replies: ${error}`);
+      throw new Error(`Failed to fetch replies: ${String(error)}`);
     }
   }
 
   /**
-   * Calculate and update recipe rating statistics
-   * Excludes owner's ratings and only counts top-level comments
+   * Recomputes and persists denormalized rating fields on the recipe document.
+   *
+   * Business rules:
+   * - only top-level comments count (no parentCommentId)
+   * - rating must be set and non-null
+   * - recipe owner ratings are excluded
    */
   async updateRecipeRating(
     recipeId: string,
@@ -149,35 +162,35 @@ export class CommentService {
     try {
       const allComments = await this.getByRecipe(recipeId);
 
-      const ratingsComments = allComments.filter(
-        (c) => c.rating && !c.parentCommentId && c.userId !== recipeOwnerId
+      const ratingComments = allComments.filter(
+        c =>
+          typeof c.rating === "number" &&
+          !c.parentCommentId &&
+          c.userId !== recipeOwnerId
       );
 
-      const reviewCount = ratingsComments.length;
-      let avgRating = 0;
+      const reviewCount = ratingComments.length;
 
-      if (reviewCount > 0) {
-        const totalRating = ratingsComments.reduce(
-          (sum, c) => sum + (c.rating || 0),
-          0
-        );
-        avgRating = totalRating / reviewCount;
-      }
+      const avgRating =
+        reviewCount > 0
+          ? ratingComments.reduce((sum, c) => sum + (c.rating as number), 0) / reviewCount
+          : 0;
 
       const recipeRef = doc(db, "recipes", recipeId);
-      await updateDoc(recipeRef, {
-        avgRating,
-        reviewCount,
-      });
+      await updateDoc(recipeRef, { avgRating, reviewCount });
 
       return { avgRating, reviewCount };
     } catch (error) {
-      throw new Error(`Failed to update recipe rating: ${error}`);
+      throw new Error(`Failed to update recipe rating: ${String(error)}`);
     }
   }
 
   /**
-   * Check if user has already rated a recipe
+   * Returns whether the user has at least one (top-level) rating comment for the recipe.
+   *
+   * Note: Firestore has restrictions around `!=` queries; ensure indexes exist and
+   * test this query shape. If it becomes brittle, consider storing `rating: number`
+   * only when present, and query with `where("rating", ">", 0)` instead.
    */
   async hasUserRated(userId: string, recipeId: string): Promise<boolean> {
     try {
@@ -197,12 +210,9 @@ export class CommentService {
   }
 
   /**
-   * Get user's existing rating for a recipe
+   * Retrieves the user's rating comment for a recipe, if any.
    */
-  async getUserRating(
-    userId: string,
-    recipeId: string
-  ): Promise<Comment | null> {
+  async getUserRating(userId: string, recipeId: string): Promise<Comment | null> {
     try {
       const q = query(
         this.collectionRef,
@@ -212,37 +222,31 @@ export class CommentService {
       );
 
       const snapshot = await getDocs(q);
+      if (snapshot.empty) return null;
 
-      if (snapshot.empty) {
-        return null;
-      }
-
-      const doc = snapshot.docs[0];
-      return {
-        id: doc.id,
-        ...doc.data(),
-      } as Comment;
+      const d = snapshot.docs[0];
+      return { id: d.id, ...d.data() } as Comment;
     } catch (error) {
-      throw new Error(`Failed to get user rating: ${error}`);
+      throw new Error(`Failed to get user rating: ${String(error)}`);
     }
   }
 
   /**
-   * Get top-level comments (no replies)
+   * Filters a comment list down to top-level comments.
    */
   getTopLevelComments(comments: Comment[]): Comment[] {
-    return comments.filter((c) => !c.parentCommentId);
+    return comments.filter(c => !c.parentCommentId);
   }
 
   /**
-   * Get replies for a specific parent comment
+   * Returns direct replies for a given parent id from an in-memory comments list.
    */
   getCommentReplies(comments: Comment[], parentId: string): Comment[] {
-    return comments.filter((c) => c.parentCommentId === parentId);
+    return comments.filter(c => c.parentCommentId === parentId);
   }
 
   /**
-   * Group comments with their replies
+   * Groups a flat comment list into `{ comment, replies }` tuples for rendering.
    */
   groupCommentsWithReplies(comments: Comment[]): Array<{
     comment: Comment;
@@ -250,55 +254,52 @@ export class CommentService {
   }> {
     const topLevel = this.getTopLevelComments(comments);
 
-    return topLevel.map((comment) => ({
+    return topLevel.map(comment => ({
       comment,
-      replies: this.getCommentReplies(comments, comment.id),
+      replies: this.getCommentReplies(comments, comment.id)
     }));
   }
 
   /**
-   * Get comment statistics for a recipe
+   * Computes summary statistics from an in-memory comments list.
    */
   getCommentStats(comments: Comment[]): CommentStats {
-  const topLevel = this.getTopLevelComments(comments);
-  const replies = comments.filter((c) => c.parentCommentId);
-  const ratingsComments = topLevel.filter(
-    (c) => typeof c.rating === "number"
-  );
+    const topLevel = this.getTopLevelComments(comments);
+    const replies = comments.filter(c => c.parentCommentId);
 
-  const ratingDistribution: RatingDistribution = {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-  };
+    const ratingsComments = topLevel.filter(c => typeof c.rating === "number");
 
-  let ratingSum = 0;
+    const ratingDistribution: RatingDistribution = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0
+    };
 
-  ratingsComments.forEach((c) => {
-    if (c.rating) {
-      ratingDistribution[c.rating]++;
-      ratingSum += c.rating;
+    let ratingSum = 0;
+
+    for (const c of ratingsComments) {
+      const rating = c.rating as number | null | undefined;
+      if (typeof rating === "number") {
+        ratingDistribution[rating as Rating]++;
+        ratingSum += rating;
+      }
     }
-  });
 
-  const avgRating =
-    ratingsComments.length > 0
-      ? ratingSum / ratingsComments.length
-      : 0;
+    const avgRating = ratingsComments.length > 0 ? ratingSum / ratingsComments.length : 0;
 
-  return {
-    totalComments: topLevel.length,
-    totalReplies: replies.length,
-    avgRating,
-    ratingDistribution,
-  };
-}
-
+    return {
+      totalComments: topLevel.length,
+      totalReplies: replies.length,
+      avgRating,
+      ratingDistribution
+    };
+  }
 
   /**
-   * Validate comment data before submission
+   * Lightweight client-side validation for comment text and optional rating.
+   * Prefer shared validators where possible; this exists for service-level convenience.
    */
   validateComment(
     text: string,
@@ -320,12 +321,11 @@ export class CommentService {
       }
     }
 
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
+    return { isValid: errors.length === 0, errors };
   }
 }
 
-// Export singleton instance
+/**
+ * Shared instance used across the application.
+ */
 export const commentService = new CommentService();

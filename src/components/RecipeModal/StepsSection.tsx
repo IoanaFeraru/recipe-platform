@@ -1,3 +1,26 @@
+/**
+ * StepsSection component.
+ *
+ * Renders and manages the UI for a recipe’s ordered preparation steps, including:
+ * - Editing step instructions (text)
+ * - Attaching an optional image per step
+ * - Showing a preview of the selected image (via `imageUrl`)
+ * - Displaying per-step upload progress (cursor-driven by the parent via `stepsProgress`)
+ *
+ * This component is intentionally “dumb”: it delegates all mutations (add/remove/update)
+ * to the parent via callbacks, enabling reuse across create/edit flows and keeping upload,
+ * validation, and persistence logic outside the view layer.
+ *
+ * Accessibility and UX considerations:
+ * - Uses semantic form controls (textarea, file input, button)
+ * - Provides `aria-label` on the remove button
+ * - Maintains step numbering to preserve user orientation
+ * - Supports inline validation messaging via `errors.steps`
+ *
+ * @param {StepsSectionProps} props - Steps data, progress indicators, and mutation handlers.
+ * @returns Steps editor section with add/remove controls and optional image handling.
+ */
+
 "use client";
 
 import React from "react";
@@ -33,7 +56,10 @@ export const StepsSection: React.FC<StepsSectionProps> = ({
   onUpdateImage,
   errors,
 }) => {
-  const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       onUpdateImage(index, file);

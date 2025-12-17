@@ -1,5 +1,33 @@
 "use client";
 
+/**
+ * HomePage
+ *
+ * Primary recipe discovery page that composes filtering, pagination, and result rendering
+ * into a single cohesive user flow. This component binds URL query state (search param `q`)
+ * to local filter state, applies in-memory filtering/sorting for the current page of recipes,
+ * and renders the appropriate UI states (loading, empty, results, pagination).
+ *
+ * Responsibilities:
+ * - Read initial search query from the URL (`?q=`) and keep filter search state in sync
+ * - Delegate filter state management to `useRecipeFilters`
+ * - Delegate data fetching/pagination to `useRecipePagination`
+ * - Apply client-side matching logic for search text, dietary, difficulty, and meal type
+ * - Apply client-side sorting for title/date based on selected sort option
+ * - Render resilient UI using `PageErrorBoundary`, including empty-state recovery actions
+ *
+ * Data/Control Flow:
+ * - URL `q` -> `useRecipeFilters(initialSearch)` + `setSearch(initialSearch)` on change
+ * - `filters.selectedTag` + `filters.sortBy` -> `useRecipePagination(...)`
+ * - `recipes` -> `filteredRecipes` (filter + sort) -> `RecipeGrid`
+ *
+ * UX Notes:
+ * - Shows `EmptyState` when not loading and no recipes match current filters/search
+ * - Provides a "Clear Filters" call-to-action when the empty state is caused by filters
+ * - Displays pagination controls only when results exist and data is not loading
+ *
+ * @component
+ */
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import FilterBar from "@/components/FilterBar/FilterBar";
@@ -10,20 +38,10 @@ import { PaginationControls } from "@/components/UI/PaginationControls";
 import { EmptyState } from "@/components/UI";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
 
-/**
- * HomePage - Recipe discovery page
- * Architecture:
- * - useRecipeFilters: Manages all filter state
- * - useRecipePagination: Handles pagination and data fetching
- * - RecipeGrid: Displays recipes in grid layout
- * - PaginationControls: Navigation buttons
- * - EmptyState: No results UI
- */
 export default function HomePage() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("q")?.toLowerCase() ?? "";
 
-  // Filter state management
   const {
     filters,
     setSelectedTag,
@@ -36,15 +54,8 @@ export default function HomePage() {
     activeFiltersCount,
   } = useRecipeFilters(initialSearch);
 
-  // Pagination and data fetching
-  const {
-    recipes,
-    loading,
-    page,
-    hasNext,
-    goToNextPage,
-    goToPrevPage,
-  } = useRecipePagination(filters.selectedTag, filters.sortBy);
+  const { recipes, loading, page, hasNext, goToNextPage, goToPrevPage } =
+    useRecipePagination(filters.selectedTag, filters.sortBy);
 
   useEffect(() => {
     setSearch(initialSearch);

@@ -1,3 +1,29 @@
+/**
+ * ProfileDangerZone component.
+ *
+ * Provides a dedicated section for irreversible and high-risk account actions,
+ * specifically permanent account deletion. This component encapsulates all UI
+ * and interaction logic required to safely trigger destructive operations,
+ * including explicit user confirmation via a modal dialog.
+ *
+ * Responsibilities:
+ * - Clearly communicate the irreversible nature of account deletion
+ * - Prevent accidental deletion through a confirmation modal
+ * - Disable destructive actions while a deletion request is in progress
+ * - Delegate the actual deletion logic to the parent via a callback
+ *
+ * Design and UX considerations:
+ * - Visually separated from other profile actions using a "danger zone" pattern
+ * - Uses strong warning language and color cues to indicate risk
+ * - Requires explicit confirmation before invoking the delete callback
+ *
+ * Accessibility considerations:
+ * - Uses semantic buttons for all actions
+ * - Confirmation modal ensures deliberate user intent
+ *
+ * @module ProfileDangerZone
+ */
+
 "use client";
 
 import React, { useState } from "react";
@@ -9,19 +35,11 @@ interface ProfileDangerZoneProps {
   onDelete: () => void;
 }
 
-/**
- * ProfileDangerZone - Dangerous account actions (deletion)
- * Includes confirmation dialog for safety
- */
 export const ProfileDangerZone: React.FC<ProfileDangerZoneProps> = ({
   isDeleting,
   onDelete,
 }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
-
-  const handleDeleteClick = () => {
-    setShowConfirmation(true);
-  };
 
   const handleConfirmDelete = () => {
     setShowConfirmation(false);
@@ -33,20 +51,19 @@ export const ProfileDangerZone: React.FC<ProfileDangerZoneProps> = ({
       <h3 className="text-lg font-semibold text-(--color-danger)">
         Danger Zone
       </h3>
-      
+
       <p className="text-sm text-(--color-text-muted) text-center">
         Once you delete your account, there is no going back. Please be certain.
       </p>
-      
-      <Button 
-        variant="danger" 
-        onClick={handleDeleteClick}
+
+      <Button
+        variant="danger"
+        onClick={() => setShowConfirmation(true)}
         disabled={isDeleting}
       >
         {isDeleting ? "Deleting..." : "Delete Account"}
       </Button>
-      
-      {/* Confirmation Modal */}
+
       <ConfirmationModal
         isOpen={showConfirmation}
         onClose={() => setShowConfirmation(false)}

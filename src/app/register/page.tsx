@@ -1,15 +1,42 @@
+/**
+ * RegisterPage
+ *
+ * User registration page for CookHub.
+ *
+ * Responsibilities:
+ * - Render the registration UI inside a page-level error boundary
+ * - Collect user credentials (email, password, confirmation, display name)
+ * - Display password strength feedback and caps-lock warnings
+ * - Handle form submission, validation feedback, and loading state via `useRegisterForm`
+ * - Provide animated UX feedback (shake on error, entry motion)
+ * - Offer navigation to the login page for existing users
+ *
+ * Architecture:
+ * - Business logic and validation are encapsulated in `useRegisterForm`
+ * - Presentation is composed from reusable auth components:
+ *   - `AuthCard` for layout
+ *   - `AuthMotion` for entrance animation
+ *   - `FormField` and `PasswordField` for inputs
+ *   - `PasswordStrengthIndicator` for real-time feedback
+ *
+ * @module RegisterPage
+ */
+
 "use client";
 
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Button from "@/components/UI/Button";
-import { AuthCard, AuthMotion, FormField, PasswordField, PasswordStrengthIndicator } from "@/components/Auth";
+import {
+  AuthCard,
+  AuthMotion,
+  FormField,
+  PasswordField,
+  PasswordStrengthIndicator,
+} from "@/components/Auth";
 import { useRegisterForm } from "@/hooks/useRegisterForm";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
 
-/**
- * RegisterPage - User registration page
- */
 export default function RegisterPage() {
   const {
     email,

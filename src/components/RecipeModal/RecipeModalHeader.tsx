@@ -1,3 +1,20 @@
+/**
+ * RecipeModalHeader component.
+ *
+ * Presentational header for the `RecipeModal` that renders a context-aware title
+ * ("Create New Recipe" vs. "Edit Recipe") and a close button. The close button
+ * can be disabled during critical operations (e.g., submission/upload) to prevent
+ * accidental modal dismissal and partial state loss.
+ *
+ * Responsibilities:
+ * - Display the correct modal title based on edit/create mode
+ * - Provide an accessible close affordance with `aria-label`
+ * - Support a disabled state to block closing while the parent is busy
+ *
+ * @param {RecipeModalHeaderProps} props - Header configuration.
+ * @returns Header row with title and close button.
+ */
+
 "use client";
 
 import React from "react";

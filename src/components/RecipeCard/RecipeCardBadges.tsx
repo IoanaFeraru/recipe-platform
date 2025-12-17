@@ -1,3 +1,26 @@
+/**
+ * RecipeCardBadges component.
+ *
+ * Renders the collection of informational badges associated with a recipe card,
+ * including difficulty, dietary restrictions, and free-form tags. This component
+ * is purely presentational and delegates badge rendering to specialized subcomponents
+ * to keep responsibilities clearly separated.
+ *
+ * Responsibilities:
+ * - Conditionally displays the difficulty badge when provided
+ * - Renders up to three dietary badges, with a compact overflow indicator
+ * - Displays recipe tags via the RecipeTags component
+ * - Propagates optional click interactions upward through `onTagClick`
+ *
+ * Interaction notes:
+ * - Clicking any badge invokes the shared `onTagClick` callback, enabling
+ *   filtering or navigation logic to be implemented at a higher level
+ * - Badge rendering is defensive and skips empty or undefined data sets
+ *
+ * @param {RecipeCardBadgesProps} props - Badge data and optional click handler.
+ * @returns A vertically stacked group of recipe metadata badges.
+ */
+
 "use client";
 
 import React from "react";
@@ -13,10 +36,6 @@ interface RecipeCardBadgesProps {
   onTagClick?: (tag: string) => void;
 }
 
-/**
- * RecipeCardBadges - Recipe badges (difficulty, dietary, tags)
- * Pure presentational component with tag click delegation
- */
 export const RecipeCardBadges: React.FC<RecipeCardBadgesProps> = ({
   difficulty,
   dietary,

@@ -1,3 +1,30 @@
+/**
+ * IngredientsSection component.
+ *
+ * Renders and manages an editable list of recipe ingredients, including name,
+ * optional quantity, optional unit selection, and optional notes. The component
+ * is intentionally “controlled”: all mutations are delegated to the parent via
+ * callbacks, keeping this component presentation-focused and predictable.
+ *
+ * Responsibilities:
+ * - Displays an ingredient editor row for each ingredient in the provided array
+ * - Supports adding new ingredient rows and removing existing rows
+ * - Emits field-level updates (name, quantity, unit, notes) to the parent
+ * - Optionally displays a section-level validation error message
+ *
+ * Business/UI rules:
+ * - At least one ingredient row must remain (remove button is hidden when only one row exists)
+ * - Quantity input is permissive but constrained to numeric decimal formats (e.g., "2", "2.5")
+ * - Unit selection is restricted to a predefined list to promote consistent data entry
+ *
+ * Accessibility:
+ * - Remove action includes an aria-label for screen reader clarity
+ * - Uses semantic form controls (input/select/button) for keyboard navigation
+ *
+ * @param {IngredientsSectionProps} props - Controlled ingredient list state and mutation handlers.
+ * @returns A form section for editing ingredient rows with add/remove and validation display.
+ */
+
 "use client";
 
 import React from "react";
@@ -36,10 +63,6 @@ const UNITS = [
   "to taste",
 ];
 
-/**
- * IngredientsSection - Ingredient list management
- * Add, remove, and update ingredients with quantities and units
- */
 export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
   ingredients,
   onAdd,
@@ -62,7 +85,6 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
       <div className="space-y-2">
         {ingredients.map((ing, i) => (
           <div key={i} className="grid grid-cols-12 gap-2 items-start">
-            {/* Name */}
             <input
               type="text"
               className="col-span-5 border-2 border-(--color-border) rounded-lg p-2 bg-(--color-bg-secondary) text-(--color-text) text-sm focus:outline-none focus:border-(--color-primary)"
@@ -71,7 +93,6 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
               onChange={(e) => onUpdate(i, "name", e.target.value)}
             />
 
-            {/* Quantity */}
             <input
               type="text"
               inputMode="decimal"
@@ -86,7 +107,6 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
               }}
             />
 
-            {/* Unit */}
             <select
               className="col-span-2 border-2 border-(--color-border) rounded-lg p-2 bg-(--color-bg-secondary) text-(--color-text) text-sm focus:outline-none focus:border-(--color-primary)"
               value={ing.unit || ""}
@@ -100,7 +120,6 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
               ))}
             </select>
 
-            {/* Notes */}
             <input
               type="text"
               className="col-span-2 border-2 border-(--color-border) rounded-lg p-2 bg-(--color-bg-secondary) text-(--color-text) text-sm focus:outline-none focus:border-(--color-primary)"
@@ -109,7 +128,6 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
               onChange={(e) => onUpdate(i, "notes", e.target.value)}
             />
 
-            {/* Remove Button */}
             {ingredients.length > 1 && (
               <button
                 type="button"
@@ -123,7 +141,6 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
           </div>
         ))}
 
-        {/* Add Button */}
         <button
           type="button"
           onClick={onAdd}

@@ -1,5 +1,33 @@
 "use client";
 
+/**
+ * ComponentErrorBoundary
+ *
+ * Lightweight wrapper around the shared `ErrorBoundary` that is intended for
+ * isolating failures at the component level without breaking overall page
+ * layout. It provides a compact default fallback (suitable for cards/sections)
+ * and supports overriding the fallback per usage.
+ *
+ * Capabilities:
+ * - Prevents a single component crash from taking down the full page
+ * - Optional `componentName` for clearer fallback messaging
+ * - Optional `onError` callback for component-scoped logging/monitoring
+ * - Optional `fallback` to provide a custom compact UI
+ *
+ * @example
+ * ```tsx
+ * // Wrap potentially unstable components
+ * <ComponentErrorBoundary componentName="RecipeCard">
+ *   <RecipeCard recipe={recipe} />
+ * </ComponentErrorBoundary>
+ *
+ * // With a custom fallback
+ * <ComponentErrorBoundary fallback={<SkeletonCard />}>
+ *   <RecipeCard recipe={recipe} />
+ * </ComponentErrorBoundary>
+ * ```
+ */
+
 import React, { ReactNode } from "react";
 import { ErrorBoundary } from "./ErrorBoundary";
 
@@ -10,16 +38,6 @@ interface ComponentErrorBoundaryProps {
   onError?: (error: Error) => void;
 }
 
-/**
- * ComponentErrorBoundary - Error boundary for individual components
- * Provides a compact fallback that doesn't break page layout
- * 
- * @example
- * // Wrap potentially unstable components
- * <ComponentErrorBoundary componentName="RecipeCard">
- *   <RecipeCard recipe={recipe} />
- * </ComponentErrorBoundary>
- */
 export const ComponentErrorBoundary: React.FC<ComponentErrorBoundaryProps> = ({
   children,
   fallback,
@@ -32,7 +50,7 @@ export const ComponentErrorBoundary: React.FC<ComponentErrorBoundaryProps> = ({
 
   return (
     <ErrorBoundary
-      onError={(error, info) => onError?.(error)}
+      onError={(error) => onError?.(error)}
       fallback={fallback ?? defaultFallback}
     >
       {children}
@@ -41,7 +59,10 @@ export const ComponentErrorBoundary: React.FC<ComponentErrorBoundaryProps> = ({
 };
 
 /**
- * ComponentErrorFallback - Compact error display for components
+ * ComponentErrorFallback
+ *
+ * Compact, non-disruptive UI used when a component fails to render.
+ * Designed to preserve grid/list layouts by keeping a predictable footprint.
  */
 interface ComponentErrorFallbackProps {
   componentName: string;

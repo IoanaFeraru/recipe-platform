@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * LoadingSpinner module.
+ *
+ * Provides reusable loading indicators for the application, supporting multiple
+ * sizes and usage contexts. The module exposes:
+ * - `LoadingSpinner` for generic loading states
+ * - `PageLoader` for full-page loading screens
+ * - `InlineLoader` for compact, inline loading indicators (e.g., buttons)
+ *
+ * The components are presentation-focused, rely on CSS animations for performance,
+ * and integrate with the application’s theme via CSS custom properties.
+ */
+
 import React from "react";
 
 type SpinnerSize = "sm" | "md" | "lg" | "xl";
@@ -54,26 +67,16 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   return spinner;
 };
 
-/**
- * PageLoader - Full page loading state
- * Use for page-level loading states
- */
-export const PageLoader: React.FC<{ message?: string }> = ({ 
-  message = "Loading..." 
+export const PageLoader: React.FC<{ message?: string }> = ({
+  message = "Loading...",
 }) => (
   <div className="min-h-screen flex items-center justify-center">
     <LoadingSpinner size="lg" message={message} />
   </div>
 );
 
-/**
- * InlineLoader - Small inline loading indicator
- * Use for button loading states or inline content
- */
-export const InlineLoader: React.FC<{ className?: string }> = ({ 
-  className = "" 
-}) => (
-  <LoadingSpinner size="sm" className={className} />
-);
+export const InlineLoader: React.FC<{ className?: string }> = ({
+  className = "",
+}) => <LoadingSpinner size="sm" className={className} />;
 
 export default LoadingSpinner;

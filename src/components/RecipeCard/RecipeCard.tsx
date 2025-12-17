@@ -1,3 +1,29 @@
+/**
+ * RecipeCard component.
+ *
+ * Renders a reusable recipe preview card for grid/list layouts, composed from
+ * smaller presentational subcomponents to keep the UI modular and maintainable.
+ *
+ * Responsibilities:
+ * - Wraps the card in a ComponentErrorBoundary to isolate rendering failures
+ * - Instantiates a RecipeModel to centralize recipe business logic and formatting
+ * - Integrates with favorites state via `useIsFavorite`, exposing an optimistic
+ *   toggle handler that prevents navigation / parent click handlers from firing
+ * - Delegates rendering to child components:
+ *   - RecipeCardImage: hero image and accessible title text
+ *   - RecipeCardContent: title/description + favorite control
+ *   - RecipeCardStats: basic summary metrics (servings, counts, time)
+ *   - RecipeCardBadges: difficulty/dietary/tags with optional tag click callback
+ *
+ * Interaction notes:
+ * - The favorite toggle handler calls `preventDefault` and `stopPropagation`
+ *   to avoid triggering navigation when the card is wrapped in a link elsewhere.
+ * - Toggle is gated by the hook's `loading` flag to prevent duplicate requests.
+ *
+ * @param {RecipeCardProps} props - Recipe object and optional tag click handler.
+ * @returns A styled recipe card element suitable for grids and lists.
+ */
+
 "use client";
 
 import React from "react";

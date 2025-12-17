@@ -1,3 +1,27 @@
+/**
+ * BasicInfoForm component.
+ *
+ * Renders the “basic details” section of the recipe create/edit form, covering:
+ * - Title (required)
+ * - Servings (required, numeric, min 1)
+ * - Description (optional)
+ * - Difficulty (optional selection: easy/medium/hard)
+ * - Meal type (optional selection from a predefined list)
+ *
+ * This component is intentionally presentational: it does not own form state.
+ * All values and state transitions are controlled by the parent via props and
+ * callback handlers, which makes the component easy to test and reuse across
+ * create and edit flows.
+ *
+ * Validation feedback is supported through an optional `errors` object, with
+ * field-specific messages rendered beneath the corresponding controls.
+ *
+ * UX notes:
+ * - Servings input accepts an empty string to allow clearing the field without
+ *   forcing an immediate numeric value (useful for controlled inputs).
+ * - Inputs/selects follow the design system via CSS variables for theme support.
+ */
+
 "use client";
 
 import React from "react";
@@ -30,9 +54,6 @@ const MEAL_TYPES = [
   "Other",
 ];
 
-/**
- * BasicInfoForm - Basic recipe information fields
- */
 export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
   title,
   description,
@@ -48,7 +69,6 @@ export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
 }) => {
   return (
     <div className="space-y-5">
-      {/* Title & Servings Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-semibold mb-2 text-(--color-text)">
@@ -81,12 +101,13 @@ export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
             }}
           />
           {errors?.servings && (
-            <p className="text-sm text-(--color-danger) mt-1">{errors.servings}</p>
+            <p className="text-sm text-(--color-danger) mt-1">
+              {errors.servings}
+            </p>
           )}
         </div>
       </div>
 
-      {/* Description */}
       <div>
         <label className="block text-sm font-semibold mb-2 text-(--color-text)">
           Description
@@ -99,7 +120,6 @@ export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
         />
       </div>
 
-      {/* Difficulty & Meal Type Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-semibold mb-2 text-(--color-text)">

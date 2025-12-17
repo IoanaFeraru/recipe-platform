@@ -1,3 +1,28 @@
+/**
+ * Layout
+ *
+ * Application root layout for the Next.js App Router.
+ * This file defines global document structure, metadata, fonts, and top-level providers
+ * used across the entire application.
+ *
+ * Responsibilities:
+ * - Declare site-wide metadata (title, description, app icon) for SEO and browser UI
+ * - Load and apply global fonts (Geist Sans / Geist Mono) via CSS variables
+ * - Import global styles (`globals.css`)
+ * - Compose global infrastructure providers:
+ *   - `ErrorBoundary` for catching unexpected render/runtime errors
+ *   - `AuthProvider` for authentication state and actions
+ *   - `ThemeProvider` for light/dark mode state and theme persistence
+ * - Render persistent UI elements shared across pages (Navbar, ScrollToTop)
+ *
+ * Rendering Notes:
+ * - `Navbar` is mounted inside providers to access auth/theme context.
+ * - `ScrollToTop` is always available for long pages.
+ * - The `children` slot renders the active route content under the global chrome.
+ *
+ * @module RootLayout
+ */
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -38,8 +63,8 @@ export default function RootLayout({
         <ErrorBoundary>
           <AuthProvider>
             <ThemeProvider>
-                <Navbar />
-                {children}
+              <Navbar />
+              {children}
             </ThemeProvider>
           </AuthProvider>
           <ScrollToTop />

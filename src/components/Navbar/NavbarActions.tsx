@@ -1,5 +1,27 @@
 "use client";
 
+/**
+ * NavbarActions component.
+ *
+ * Renders the right-hand action area of the main navigation bar. This component
+ * adapts its output based on authentication state, exposing different controls
+ * for authenticated and guest users while consistently providing theme
+ * switching functionality.
+ *
+ * Responsibilities:
+ * - Display authentication-dependent actions (profile, favorites, dashboard, logout)
+ * - Display guest actions (login and registration) when unauthenticated
+ * - Provide a theme toggle control with visual state indication
+ * - Delegate concrete action rendering to focused subcomponents
+ *
+ * Design notes:
+ * - Authentication state is injected via props to keep the component stateless
+ * - UI concerns are separated into AuthenticatedActions and GuestActions for clarity
+ * - Icon-only buttons are used for compact navigation affordances
+ *
+ * @module NavbarActions
+ */
+
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,10 +36,6 @@ interface NavbarActionsProps {
   onThemeToggle: () => void;
 }
 
-/**
- * NavbarActions - User action buttons and theme toggle
- * Renders different content based on auth state
- */
 export const NavbarActions: React.FC<NavbarActionsProps> = ({
   user,
   theme,
@@ -31,7 +49,7 @@ export const NavbarActions: React.FC<NavbarActionsProps> = ({
       ) : (
         <GuestActions />
       )}
-      
+
       <ThemeToggle checked={theme === "dark"} onChange={onThemeToggle} />
       <span className="ml-2 text-sm" aria-hidden="true">
         {theme === "dark" ? "🌙" : "☀️"}
@@ -40,9 +58,6 @@ export const NavbarActions: React.FC<NavbarActionsProps> = ({
   );
 };
 
-/**
- * AuthenticatedActions - Actions for logged-in users
- */
 const AuthenticatedActions: React.FC<{
   user: User;
   onLogout: () => void;
@@ -54,13 +69,13 @@ const AuthenticatedActions: React.FC<{
           <img src="/fi-sr-heart.svg" alt="" className="w-5 h-5" />
         </Button>
       </Link>
-      
+
       <Link href="/dashboard" aria-label="My Recipes">
         <Button variant="primary" iconOnly>
           <img src="/books.svg" alt="" className="w-5 h-5" />
         </Button>
       </Link>
-      
+
       <Link href="/profile" aria-label="Profile">
         <Button
           variant="primary"
@@ -76,10 +91,10 @@ const AuthenticatedActions: React.FC<{
           />
         </Button>
       </Link>
-      
-      <Button 
-        variant="danger" 
-        onClick={onLogout} 
+
+      <Button
+        variant="danger"
+        onClick={onLogout}
         iconOnly
         aria-label="Logout"
       >
@@ -89,9 +104,6 @@ const AuthenticatedActions: React.FC<{
   );
 };
 
-/**
- * GuestActions - Actions for non-authenticated users
- */
 const GuestActions: React.FC = () => {
   return (
     <>

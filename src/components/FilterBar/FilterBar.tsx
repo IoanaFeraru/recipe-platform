@@ -1,5 +1,34 @@
 "use client";
 
+/**
+ * FilterBar component.
+ *
+ * Provides a consolidated UI for sorting and filtering recipe lists. This component
+ * coordinates multiple filter sub-components (dietary, difficulty, meal type) and
+ * exposes a controlled API via props so that the parent page owns filter state.
+ *
+ * Responsibilities:
+ * - Render sort controls and propagate sort option changes to the parent
+ * - Toggle visibility of advanced filters (collapsible panel)
+ * - Compute and display the current number of active filters
+ * - Provide a one-click reset that restores default sorting and clears filters
+ * - Wire “remove filter” actions from ActiveFiltersDisplay back into parent state
+ *
+ * Composition:
+ * - SortButtons: sort option selection
+ * - DietaryFilter: multi-select dietary preferences
+ * - DifficultySlider: single-select (toggleable) difficulty selection
+ * - MealTypeFilter: single-select meal type filter
+ * - ActiveFiltersDisplay: chip/tag display for active filters with remove actions
+ *
+ * UX notes:
+ * - Filter panel is collapsible to preserve screen real estate
+ * - Active filter count is surfaced directly on the toggle button
+ * - Reset action is only shown when filters are active
+ *
+ * @module FilterBar
+ */
+
 import { useState } from "react";
 import { DietaryOption } from "@/types/recipe";
 import { SortButtons } from "./SortButtons";
@@ -60,7 +89,6 @@ export default function FilterBar({
   return (
     <div className="bg-(--color-bg-secondary) border-2 border-(--color-border) rounded-2xl p-6 mb-8 shadow-[4px_4px_0_0_var(--color-shadow)]">
       <div className="flex items-center justify-between pt-2 border-t-2 border-(--color-border)">
-        {/* LEFT SIDE */}
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <label className="text-sm font-semibold text-(--color-text)">
@@ -82,7 +110,6 @@ export default function FilterBar({
           </button>
         </div>
 
-        {/* RIGHT SIDE */}
         {activeFiltersCount > 0 && (
           <button
             onClick={resetFilters}

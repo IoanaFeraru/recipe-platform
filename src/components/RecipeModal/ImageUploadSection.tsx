@@ -1,3 +1,25 @@
+/**
+ * ImageUploadSection component.
+ *
+ * Provides a controlled UI for uploading and previewing a recipe’s main image.
+ * This component is presentation-focused and delegates all upload logic and
+ * state management (progress, uploading state, and file handling) to its parent.
+ *
+ * Responsibilities:
+ * - Accepts image files via a file input restricted to image MIME types
+ * - Emits the selected file through a callback for external handling
+ * - Displays a preview of the selected or existing image
+ * - Shows a visual progress indicator while an upload is in progress
+ *
+ * UX considerations:
+ * - Disables the file input while an upload is active to prevent conflicts
+ * - Shows real-time progress feedback to communicate upload status
+ * - Uses responsive, theme-aware styling consistent with the application design system
+ *
+ * @param {ImageUploadSectionProps} props - Image preview URL, upload state, and change handler.
+ * @returns A form section for selecting, previewing, and tracking upload progress of a recipe image.
+ */
+
 "use client";
 
 import React from "react";
@@ -9,10 +31,6 @@ interface ImageUploadSectionProps {
   onChange: (file: File) => void;
 }
 
-/**
- * ImageUploadSection - Main recipe image upload with preview
- * Shows upload progress when uploading
- */
 export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   preview,
   progress,
@@ -31,6 +49,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
       <label className="block text-sm font-semibold mb-2 text-(--color-text)">
         Recipe Image
       </label>
+
       <input
         type="file"
         accept="image/*"
@@ -39,7 +58,6 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
         className="w-full border-2 border-(--color-border) rounded-lg p-2 bg-(--color-bg-secondary) text-(--color-text) text-sm file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:bg-(--color-primary) file:text-white file:cursor-pointer disabled:opacity-50"
       />
 
-      {/* Image Preview */}
       {preview && (
         <img
           src={preview}
@@ -48,7 +66,6 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
         />
       )}
 
-      {/* Upload Progress */}
       {isUploading && progress > 0 && progress < 100 && (
         <div className="mt-2">
           <div className="w-full bg-(--color-bg-secondary) rounded-full h-2">

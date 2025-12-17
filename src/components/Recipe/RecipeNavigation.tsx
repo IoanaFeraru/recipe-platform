@@ -1,12 +1,32 @@
+/**
+ * RecipeNavigation component.
+ *
+ * Provides a fixed-position navigation control that allows users to return
+ * to the main recipes listing. This component follows a floating action
+ * button (FAB) interaction pattern to ensure persistent availability
+ * without interfering with page content.
+ *
+ * Responsibilities:
+ * - Offer a clear and consistent way to navigate back to the recipes overview
+ * - Integrate with Next.js client-side routing
+ *
+ * Design considerations:
+ * - Fixed positioning in the bottom-left corner for ergonomic access
+ * - Circular FAB styling aligned with the application design system
+ * - High visual contrast to ensure visibility over content
+ *
+ * Accessibility notes:
+ * - Uses a semantic button element
+ * - Includes an aria-label to describe the navigation action
+ *
+ * @module RecipeNavigation
+ */
+
 "use client";
 
 import React from "react";
 import { useRouter } from "next/navigation";
 
-/**
- * RecipeNavigation - Fixed position back button for recipe page
- * Follows Material Design FAB pattern
- */
 export const RecipeNavigation: React.FC = () => {
   const router = useRouter();
 

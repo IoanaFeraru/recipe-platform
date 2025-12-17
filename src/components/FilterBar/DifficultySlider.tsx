@@ -1,5 +1,25 @@
 "use client";
 
+/**
+ * DifficultySlider component.
+ *
+ * Provides an interactive, visual selector for recipe difficulty level.
+ * Users can choose between predefined difficulty options (easy, medium, hard)
+ * or deselect the current choice to reset the filter.
+ *
+ * Responsibilities:
+ * - Render difficulty options along a slider-like visual track
+ * - Allow toggling a difficulty on/off via direct selection
+ * - Communicate the selected difficulty (or null) to the parent component
+ *
+ * Design notes:
+ * - Uses a color-graded track to imply progression from easy to hard
+ * - Emoji-based buttons improve scannability and user engagement
+ * - Fully controlled via props; no internal state is persisted
+ *
+ * @module DifficultySlider
+ */
+
 import React from "react";
 
 interface DifficultySliderProps {
@@ -18,11 +38,7 @@ export const DifficultySlider: React.FC<DifficultySliderProps> = ({
   onDifficultyChange,
 }) => {
   const handleSelect = (value: "easy" | "medium" | "hard") => {
-    if (difficulty === value) {
-      onDifficultyChange(null);
-    } else {
-      onDifficultyChange(value);
-    }
+    onDifficultyChange(difficulty === value ? null : value);
   };
 
   return (
@@ -31,18 +47,16 @@ export const DifficultySlider: React.FC<DifficultySliderProps> = ({
         🎯 Difficulty Level
       </label>
 
-      {/* Slider Track */}
       <div className="relative">
-        {/* Background gradient track */}
         <div
           className="h-3 rounded-full mb-4"
           style={{
-            background: "linear-gradient(to right, #90A493 0%, #D68662 50%, #e04038 100%)",
+            background:
+              "linear-gradient(to right, #90A493 0%, #D68662 50%, #e04038 100%)",
             opacity: 0.3,
           }}
         />
 
-        {/* Difficulty buttons */}
         <div className="flex justify-between items-center -mt-6 relative">
           {DIFFICULTY_OPTIONS.map((option) => (
             <button
@@ -50,11 +64,14 @@ export const DifficultySlider: React.FC<DifficultySliderProps> = ({
               onClick={() => handleSelect(option.value)}
               className={`
                 flex flex-col items-center gap-1 transition-all duration-300
-                ${difficulty === option.value ? "scale-125" : "scale-100 opacity-70 hover:opacity-100 hover:scale-110"}
+                ${
+                  difficulty === option.value
+                    ? "scale-125"
+                    : "scale-100 opacity-70 hover:opacity-100 hover:scale-110"
+                }
               `}
               aria-label={`Set difficulty to ${option.label}`}
             >
-              {/* Emoji circle */}
               <div
                 className={`
                   w-14 h-14 rounded-full flex items-center justify-center text-2xl
@@ -65,18 +82,19 @@ export const DifficultySlider: React.FC<DifficultySliderProps> = ({
                       : "shadow-[0_4px_10px_rgba(0,0,0,0.2)]"
                   }
                 `}
-                style={{
-                  backgroundColor: option.color,
-                }}
+                style={{ backgroundColor: option.color }}
               >
                 {option.emoji}
               </div>
 
-              {/* Label */}
               <span
                 className={`
                   text-xs font-semibold transition-all
-                  ${difficulty === option.value ? "text-(--color-text) scale-110" : "text-(--color-text-muted)"}
+                  ${
+                    difficulty === option.value
+                      ? "text-(--color-text) scale-110"
+                      : "text-(--color-text-muted)"
+                  }
                 `}
               >
                 {option.label}

@@ -1,5 +1,31 @@
 "use client";
 
+/**
+ * PasswordStrengthIndicator
+ *
+ * Presentational UI component that visualizes password strength using a compact
+ * progress bar and helper message. Intended to be used alongside password inputs
+ * to provide immediate feedback as the user types.
+ *
+ * Responsibilities:
+ * - Conditionally render strength feedback (via the `show` flag)
+ * - Map a normalized strength level (weak/medium/strong) to consistent UI styling
+ * - Expose progress semantics for assistive technologies
+ *
+ * Accessibility:
+ * - Uses `role="progressbar"` with `aria-valuenow/min/max` to communicate strength score
+ * - Provides an `aria-label` that includes the strength level for screen readers
+ *
+ * @component
+ *
+ * @example
+ * ```tsx
+ * <PasswordStrengthIndicator
+ *   strength={passwordStrength}
+ *   show={password.length > 0}
+ * />
+ * ```
+ */
 import React from "react";
 import { PasswordStrength as PasswordStrengthType } from "@/lib/utils/validation";
 
@@ -24,15 +50,8 @@ const STRENGTH_CONFIG = {
     color: "bg-green-500",
     textColor: "text-green-600",
   },
-};
+} as const;
 
-/**
- * PasswordStrength - Visual password strength indicator
- * Shows a progress bar and message based on password strength
- * 
- * @example
- * <PasswordStrength strength={passwordStrength} show={password.length > 0} />
- */
 export const PasswordStrengthIndicator: React.FC<PasswordStrengthProps> = ({
   strength,
   show = true,
@@ -43,7 +62,6 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthProps> = ({
 
   return (
     <div className="mt-1 animate-in fade-in duration-200">
-      {/* Progress bar */}
       <div className="h-1 rounded bg-(--color-border) overflow-hidden">
         <div
           className={`h-1 rounded transition-all duration-300 ${config.width} ${config.color}`}
@@ -54,11 +72,8 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthProps> = ({
           aria-label={`Password strength: ${strength.level}`}
         />
       </div>
-      
-      {/* Message */}
-      <p className={`text-xs mt-1 ${config.textColor}`}>
-        {strength.message}
-      </p>
+
+      <p className={`text-xs mt-1 ${config.textColor}`}>{strength.message}</p>
     </div>
   );
 };

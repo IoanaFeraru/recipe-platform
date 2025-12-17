@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * EmptyState component.
+ *
+ * Renders a consistent, user-friendly empty state for views with no content
+ * (e.g., empty search results, no favorites, first-time user states). It supports
+ * an optional icon, title, helper message, and an optional call-to-action button
+ * to guide the user toward the next step.
+ */
+
 import React from "react";
 
 interface EmptyStateProps {
@@ -12,10 +21,6 @@ interface EmptyStateProps {
   };
 }
 
-/**
- * EmptyState - Reusable empty state component
- * Displays when no data is available with optional CTA
- */
 export const EmptyState: React.FC<EmptyStateProps> = ({
   icon = "🔍",
   title = "No results found",
@@ -25,10 +30,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <div className="text-center py-20">
       <div className="text-6xl mb-4">{icon}</div>
+
       <p className="text-(--color-text-muted) text-lg mb-2">{title}</p>
+
       {message && (
         <p className="text-(--color-text-muted) text-sm">{message}</p>
       )}
+
       {action && (
         <button
           onClick={action.onClick}

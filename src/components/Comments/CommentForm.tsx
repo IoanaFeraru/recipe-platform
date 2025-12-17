@@ -1,5 +1,43 @@
 "use client";
 
+/**
+ * CommentForm
+ *
+ * Form component for creating, editing, or replying to comments on a recipe.
+ * Supports optional star ratings for non-owners and text-only replies for
+ * recipe owners. Handles validation, submission state, and conditional UI
+ * based on user role and existing reviews.
+ *
+ * This component encapsulates only presentation and local form state;
+ * submission logic is delegated to the parent via the `onSubmit` callback.
+ *
+ * @component
+ *
+ * @param {Object} props
+ * @param {(text: string, rating: Rating | null) => Promise<void>} props.onSubmit
+ *        Callback invoked when the form is submitted successfully
+ * @param {boolean} props.isOwner
+ *        Whether the current user is the owner of the recipe (owners cannot rate)
+ * @param {boolean} props.userHasRated
+ *        Indicates if the current user has already submitted a review
+ * @param {boolean} props.isSubmitting
+ *        Submission/loading state used to disable inputs and buttons
+ * @param {string} [props.initialText]
+ *        Optional initial comment text (used for editing or replies)
+ * @param {Rating | null} [props.initialRating]
+ *        Optional initial rating value (used when editing an existing review)
+ *
+ * @example
+ * ```tsx
+ * <CommentForm
+ *   onSubmit={handleSubmit}
+ *   isOwner={false}
+ *   userHasRated={false}
+ *   isSubmitting={loading}
+ * />
+ * ```
+ */
+
 import { useState } from "react";
 import { Rating } from "@/types/comment";
 import StarRating from "./StarRating";

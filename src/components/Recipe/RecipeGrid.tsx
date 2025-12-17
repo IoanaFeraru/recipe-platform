@@ -1,3 +1,29 @@
+/**
+ * RecipeGrid component.
+ *
+ * Renders a responsive grid layout of recipe cards and manages the visual
+ * loading state while recipe data is being fetched. This component is
+ * presentation-focused and delegates all recipe rendering logic to
+ * `RecipeCard`, ensuring separation of concerns.
+ *
+ * Responsibilities:
+ * - Display a centered loading spinner while recipes are loading
+ * - Render a responsive grid of recipe cards once data is available
+ * - Forward tag click interactions to parent components for filtering/navigation
+ *
+ * Design considerations:
+ * - Uses a CSS grid that adapts from 1 to 3 columns based on viewport size
+ * - Maintains consistent spacing between cards for visual balance
+ * - Keeps loading feedback simple and unobtrusive
+ *
+ * Accessibility notes:
+ * - Loading indicator is visually centered and clearly communicates busy state
+ * - Card layout preserves natural tab order for keyboard navigation
+ *
+ * @param {RecipeGridProps} props - Recipe list, loading state, and optional tag click handler.
+ * @returns A loading indicator or a responsive grid of recipe cards.
+ */
+
 "use client";
 
 import React from "react";
@@ -10,9 +36,6 @@ interface RecipeGridProps {
   onTagClick?: (tag: string) => void;
 }
 
-/**
- * RecipeGrid - Grid layout for recipe cards with loading state
- */
 export const RecipeGrid: React.FC<RecipeGridProps> = ({
   recipes,
   loading,
@@ -21,7 +44,7 @@ export const RecipeGrid: React.FC<RecipeGridProps> = ({
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-(--color-primary) border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-(--color-primary) border-t-transparent" />
       </div>
     );
   }

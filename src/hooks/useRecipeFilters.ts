@@ -34,12 +34,24 @@ const DEFAULT_FILTERS: RecipeFilters = {
 };
 
 /**
- * useRecipeFilters - Manages recipe filter state
- * Provides filter state, setters, and reset functionality
+ * Recipe list filter state hook.
+ *
+ * Centralizes all UI-level filter criteria used to query and/or post-filter recipes:
+ * - taxonomy filters: tag, dietary options, difficulty, meal type
+ * - presentation controls: sort order
+ * - free-text query: search
+ *
+ * Provides stable setter callbacks suitable for passing into memoized child components,
+ * plus a reset function that clears filters while intentionally preserving the current
+ * search query (search is treated as user intent rather than a "toggle" filter).
+ *
+ * Also computes `activeFiltersCount` for badges/indicators; this excludes `search` and
+ * `sortBy` by design, since those are typically always present and would inflate counts.
+ *
+ * @param initialSearch - Optional initial search string (e.g., from route/query params)
+ * @returns Filter state, setters, reset handler, and active filter count
  */
-export const useRecipeFilters = (
-  initialSearch: string = ""
-): UseRecipeFiltersReturn => {
+export const useRecipeFilters = (initialSearch: string = ""): UseRecipeFiltersReturn => {
   const [filters, setFilters] = useState<RecipeFilters>({
     ...DEFAULT_FILTERS,
     search: initialSearch,
@@ -53,12 +65,9 @@ export const useRecipeFilters = (
     setFilters((prev) => ({ ...prev, dietary }));
   }, []);
 
-  const setDifficulty = useCallback(
-    (difficulty: "easy" | "medium" | "hard" | null) => {
-      setFilters((prev) => ({ ...prev, difficulty }));
-    },
-    []
-  );
+  const setDifficulty = useCallback((difficulty: "easy" | "medium" | "hard" | null) => {
+    setFilters((prev) => ({ ...prev, difficulty }));
+  }, []);
 
   const setMealType = useCallback((mealType: string) => {
     setFilters((prev) => ({ ...prev, mealType }));
@@ -75,11 +84,11 @@ export const useRecipeFilters = (
   const resetFilters = useCallback(() => {
     setFilters({
       ...DEFAULT_FILTERS,
-      search: filters.search, // Keep search
+      // Non-obvious business rule: keep the current search query on reset.
+      search: filters.search,
     });
   }, [filters.search]);
 
-  // Calculate active filters count (excludes search and sort)
   const activeFiltersCount =
     (filters.selectedTag ? 1 : 0) +
     filters.dietary.length +

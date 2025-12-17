@@ -1,5 +1,40 @@
 "use client";
 
+/**
+ * CommentsRatings
+ *
+ * Container/orchestrator component that composes the recipe review experience:
+ * aggregated rating summary, authenticated review/comment submission, and the
+ * threaded comments list with user avatars.
+ *
+ * Responsibilities:
+ * - Connects to authentication via `useAuth` to determine current user + owner state
+ * - Loads and mutates comment/rating data via `useComments` (real-time by default)
+ * - Computes whether the current user is the recipe owner (owners can reply but not rate)
+ * - Implements “create vs update” behavior for a user’s single review:
+ *   - If the user has already rated, submits an update to that existing comment
+ *   - Otherwise creates a new top-level comment with optional rating
+ * - Fetches and caches avatar URLs for all unique users appearing in comments + replies
+ * - Renders explicit loading and error states to avoid partial/incorrect UI
+ * - Delegates rendering concerns to `CommentsSection`, `CommentForm`, and `CommentsList`
+ * - Wraps the interactive area in `ComponentErrorBoundary` to prevent page breakage
+ *
+ * Notes / business rules enforced upstream:
+ * - One rating per user and “owner cannot rate” rules are enforced in `useComments`
+ *   (via `commentService`), while this component focuses on orchestration.
+ *
+ * @component
+ *
+ * @param {Object} props
+ * @param {string} props.recipeId - Recipe identifier used to fetch comments/ratings
+ * @param {string} props.recipeOwnerId - User id of the recipe owner (used for permissions and UI)
+ *
+ * @example
+ * ```tsx
+ * <CommentsRatings recipeId={recipe.id} recipeOwnerId={recipe.userId} />
+ * ```
+ */
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useComments } from "@/hooks/useComments";
@@ -41,11 +76,10 @@ export default function CommentsRatings({
 
   const isOwner = user?.uid === recipeOwnerId;
 
-  // Fetch user avatars for all commenters
+  // Fetch user avatars for all commenters (top-level + replies) and cache them locally.
   useEffect(() => {
     const uniqueUserIds = new Set(topLevelComments.map((c) => c.userId));
 
-    // Add user IDs from all replies
     topLevelComments.forEach((comment) => {
       const replies = getReplies(comment.id);
       replies.forEach((reply) => uniqueUserIds.add(reply.userId));
@@ -57,7 +91,8 @@ export default function CommentsRatings({
         setUserAvatars((prev) => ({ ...prev, [userId]: avatarUrl }));
       }
     });
-  }, [topLevelComments]);
+    // Intentionally keyed to comment changes; avatar cache prevents repeat calls.
+  }, [topLevelComments, getReplies, userAvatars]);
 
   // Handle comment submission (create or update)
   const handleCommentSubmit = async (text: string, rating: Rating | null) => {
@@ -74,7 +109,7 @@ export default function CommentsRatings({
       <div className="space-y-8">
         <CommentsSection totalRatings={0} averageRating={0} />
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-(--color-primary) border-t-transparent"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-(--color-primary) border-t-transparent" />
           <p className="mt-4 text-(--color-text-muted)">Loading comments...</p>
         </div>
       </div>
@@ -87,7 +122,9 @@ export default function CommentsRatings({
       <div className="space-y-8">
         <CommentsSection totalRatings={0} averageRating={0} />
         <div className="bg-red-100 border-2 border-red-400 rounded-xl p-6 text-center">
-          <p className="text-red-700">Failed to load comments. Please try again.</p>
+          <p className="text-red-700">
+            Failed to load comments. Please try again.
+          </p>
         </div>
       </div>
     );
@@ -97,10 +134,7 @@ export default function CommentsRatings({
     <ComponentErrorBoundary componentName="CommentsRatings">
       <div className="space-y-8">
         {/* Header & Rating Display */}
-        <CommentsSection
-          totalRatings={totalRatings}
-          averageRating={averageRating}
-        />
+        <CommentsSection totalRatings={totalRatings} averageRating={averageRating} />
 
         {/* Comment Form */}
         {user ? (

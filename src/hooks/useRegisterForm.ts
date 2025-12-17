@@ -2,17 +2,9 @@ import { useState, useCallback, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "firebase/auth";
-import {
-  validateEmail,
-  validatePassword,
-  validatePasswordMatch,
-  validateRequiredText,
-  PasswordStrength,
-  getPasswordStrength,
-} from "@/lib/utils/validation";
+import { validateEmail, validatePassword, validatePasswordMatch, validateRequiredText, PasswordStrength, getPasswordStrength } from "@/lib/utils/validation";
 
 interface UseRegisterFormReturn {
-  // Form state
   email: string;
   password: string;
   confirmPassword: string;
@@ -21,11 +13,7 @@ interface UseRegisterFormReturn {
   error: string;
   isSubmitting: boolean;
   shake: boolean;
-  
-  // Computed
   passwordStrength: PasswordStrength;
-  
-  // Actions
   setEmail: (value: string) => void;
   setPassword: (value: string) => void;
   setConfirmPassword: (value: string) => void;
@@ -36,91 +24,88 @@ interface UseRegisterFormReturn {
 }
 
 /**
- * useRegisterForm - Custom hook for registration form state and logic
- * 
- * Encapsulates:
- * - Form state management
- * - Validation logic with password strength
- * - Submission handling with profile update
- * - Error management
- * - UI state (shake animation, caps lock detection)
- * 
- * @example
- * const { 
- *   email, setEmail, 
- *   passwordStrength,
- *   handleSubmit 
- * } = useRegisterForm();
+ * Registration form hook.
+ *
+ * Owns all state and submission logic for the signup flow:
+ * - tracks form fields (email, password, confirmation, display name)
+ * - computes password strength for UI feedback
+ * - validates inputs before attempting registration
+ * - creates Firebase Auth account via AuthContext
+ * - sets the user's displayName via Firebase Auth profile update
+ * - navigates to /dashboard on success
+ *
+ * UI behavior:
+ * - `error` is a single message representing the first failing validation or server error
+ * - `shake` is a transient flag (400ms) intended to drive a shake animation on errors
+ * - `capsLock` is controlled by the caller (key event handling lives in the component)
  */
 export const useRegisterForm = (): UseRegisterFormReturn => {
   const { register } = useAuth();
   const router = useRouter();
 
-  // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [capsLock, setCapsLock] = useState(false);
-  
-  // UI state
+
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shake, setShake] = useState(false);
 
-  // Computed password strength
-  const passwordStrength = useMemo(() => {
-    return getPasswordStrength(password);
-  }, [password]);
+  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
 
   const triggerShake = useCallback(() => {
     setShake(true);
     setTimeout(() => setShake(false), 400);
   }, []);
 
-  const clearError = useCallback(() => {
-    setError("");
-  }, []);
+  const clearError = useCallback(() => setError(""), []);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError("");
 
-    // Run all validations
-    const validations = [
-      validateEmail(email),
-      validatePassword(password),
-      validatePasswordMatch(password, confirmPassword),
-      validateRequiredText(name, "Name"),
-    ];
+      const validations = [
+        validateEmail(email),
+        validatePassword(password),
+        validatePasswordMatch(password, confirmPassword),
+        validateRequiredText(name, "Name")
+      ];
 
-    const failedValidation = validations.find((v) => !v.isValid);
-    if (failedValidation) {
-      setError(failedValidation.error ?? "Validation failed");
-      triggerShake();
-      return;
-    }
-
-    // Submit
-    setIsSubmitting(true);
-    
-    try {
-      const userCredential = await register(email, password);
-
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, { 
-          displayName: name.trim() 
-        });
+      const failed = validations.find(v => !v.isValid);
+      if (failed) {
+        setError(failed.error ?? "Validation failed");
+        triggerShake();
+        return;
       }
 
-      router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message ?? "Registration failed");
-      triggerShake();
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [email, password, confirmPassword, name, register, router, triggerShake]);
+      setIsSubmitting(true);
+
+      try {
+        const userCredential = await register(email, password);
+
+        // Keep profile updates close to the auth action so UI can rely on displayName shortly after signup.
+        if (userCredential.user) {
+          await updateProfile(userCredential.user, { displayName: name.trim() });
+        }
+
+        router.push("/dashboard");
+      } catch (err: unknown) {
+        const message =
+          err && typeof err === "object" && "message" in err
+            ? String((err as any).message)
+            : "Registration failed";
+
+        setError(message);
+        triggerShake();
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [email, password, confirmPassword, name, register, router, triggerShake]
+  );
 
   return {
     email,
@@ -138,7 +123,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
     setName,
     setCapsLock,
     handleSubmit,
-    clearError,
+    clearError
   };
 };
 

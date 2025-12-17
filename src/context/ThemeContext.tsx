@@ -12,6 +12,23 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
+/**
+ * Application theme context for client-side light/dark mode management.
+ *
+ * Responsibilities:
+ * - Stores and restores the user’s theme preference using `localStorage`
+ * - Applies the active theme to `document.documentElement` via a `data-theme` attribute (for CSS variables/selectors)
+ * - Exposes a `toggleTheme()` action for UI controls
+ * - Computes and preloads a theme-appropriate logo asset to reduce visual flashing during theme changes
+ *
+ * Behavior:
+ * - Defaults to `"light"` when no persisted preference exists
+ * - Persists any theme change immediately to `localStorage`
+ * - Sets `data-theme="dark"` for dark mode and clears the attribute for light mode
+ *
+ * Usage:
+ * Wrap your application tree with `ThemeProvider`, then consume via `useTheme()`.
+ */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
   const [logoSrc, setLogoSrc] = useState<string>("/logoLight.svg");
@@ -31,7 +48,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const src = theme === "dark" ? "/logoDark.svg" : "/logoLight.svg";
-    // optional: preload to reduce flash
     const img = new Image();
     img.src = src;
     setLogoSrc(src);
@@ -47,7 +63,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useTheme = () => {
+export const useTheme = (): ThemeContextType => {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error("useTheme must be used inside ThemeProvider");
   return ctx;

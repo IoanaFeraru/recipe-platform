@@ -7,7 +7,7 @@ import {
   orderBy,
   onSnapshot,
   where,
-  QueryConstraint,
+  QueryConstraint
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -19,11 +19,15 @@ interface UseRecipesReturn {
 }
 
 /**
- * Custom hook for fetching recipes with optional real-time updates
- * Follows functional programming and React hooks patterns
+ * Hook for listing recipes with optional filters.
  *
- * @param filters - Optional filters to apply
- * @param realtime - Whether to use real-time updates (default: false)
+ * Supports two modes:
+ * - Static: fetches once via RecipeService and exposes `refetch()`
+ * - Realtime: attaches a Firestore listener and keeps the list in sync
+ *
+ * Important: realtime mode currently mirrors only a subset of RecipeFilters
+ * (tag + difficulty) because Firestore query composition is constrained and
+ * the hook is optimized for the common list views.
  */
 export const useRecipes = (
   filters?: RecipeFilters,
@@ -49,55 +53,62 @@ export const useRecipes = (
   }, [filters]);
 
   useEffect(() => {
-    if (realtime) {
-      const constraints: QueryConstraint[] = [];
-
-      if (filters?.tag) {
-        constraints.push(where("tags", "array-contains", filters.tag));
-      }
-
-      if (filters?.difficulty) {
-        constraints.push(where("difficulty", "==", filters.difficulty));
-      }
-
-      constraints.push(orderBy("createdAt", "desc"));
-
-      const q = query(collection(db, "recipes"), ...constraints);
-
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const data = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as Recipe[];
-
-          setRecipes(data);
-          setLoading(false);
-        },
-        (err) => {
-          setError(err);
-          setLoading(false);
-          console.error("Error in real-time listener:", err);
-        }
-      );
-
-      return () => unsubscribe();
-    } else {
+    if (!realtime) {
       fetchRecipes();
+      return;
     }
-  }, [realtime, fetchRecipes]);
+
+    const constraints: QueryConstraint[] = [];
+
+    if (filters?.tag) {
+      constraints.push(where("tags", "array-contains", filters.tag));
+    }
+
+    if (filters?.difficulty) {
+      constraints.push(where("difficulty", "==", filters.difficulty));
+    }
+
+    constraints.push(orderBy("createdAt", "desc"));
+
+    const q = query(collection(db, "recipes"), ...constraints);
+
+    const unsubscribe = onSnapshot(
+      q,
+      snapshot => {
+        const data = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data()
+        })) as Recipe[];
+
+        setRecipes(data);
+        setLoading(false);
+      },
+      err => {
+        setError(err);
+        setLoading(false);
+        console.error("Error in real-time listener:", err);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [realtime, filters?.tag, filters?.difficulty, fetchRecipes]);
 
   return {
     recipes,
     loading,
     error,
-    refetch: fetchRecipes,
+    refetch: fetchRecipes
   };
 };
 
 /**
- * Hook for fetching a single recipe by ID
+ * Hook for fetching a single recipe by ID.
+ *
+ * Uses RecipeService for the read, and normalizes ingredient shape to tolerate
+ * legacy / inconsistent stored structures (e.g., nested `ing.name.name`).
+ *
+ * This hook is intentionally "static" (no listener). If you need live updates,
+ * a dedicated realtime variant is preferable to avoid surprising read costs.
  */
 export const useRecipe = (id: string | undefined) => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
@@ -113,20 +124,23 @@ export const useRecipe = (id: string | undefined) => {
     const fetchRecipe = async () => {
       setLoading(true);
       setError(null);
+
       try {
         const data = await recipeService.getById(id);
-        if (data) {
-          const ingredients: Ingredient[] = (data.ingredients ?? []).map(
-            (ing: any) => ({
-              name:
-                typeof ing.name === "string" ? ing.name : ing.name?.name ?? "",
-              quantity: ing.quantity,
-              unit: ing.unit,
-              notes: ing.notes,
-            })
-          );
-          setRecipe({ ...data, ingredients });
+
+        if (!data) {
+          setRecipe(null);
+          return;
         }
+
+        const ingredients: Ingredient[] = (data.ingredients ?? []).map((ing: any) => ({
+          name: typeof ing.name === "string" ? ing.name : ing.name?.name ?? "",
+          quantity: ing.quantity,
+          unit: ing.unit,
+          notes: ing.notes
+        }));
+
+        setRecipe({ ...data, ingredients });
       } catch (err) {
         setError(err as Error);
         console.error("Error fetching recipe:", err);
@@ -142,7 +156,12 @@ export const useRecipe = (id: string | undefined) => {
 };
 
 /**
- * Hook for managing user's recipes
+ * Hook for managing recipes owned by a specific user.
+ *
+ * Provides a small "CRUD + refresh" façade for profile/dashboards:
+ * - reads via RecipeService.getByAuthor()
+ * - writes via RecipeService.create/update/delete()
+ * - refreshes after each mutation to keep UI state consistent
  */
 export const useUserRecipes = (userId: string | undefined) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -151,6 +170,7 @@ export const useUserRecipes = (userId: string | undefined) => {
 
   const fetchUserRecipes = useCallback(async () => {
     if (!userId) {
+      setRecipes([]);
       setLoading(false);
       return;
     }
@@ -204,7 +224,7 @@ export const useUserRecipes = (userId: string | undefined) => {
     async (id: string) => {
       try {
         await recipeService.delete(id);
-        await fetchUserRecipes(); // Refresh list
+        await fetchUserRecipes();
       } catch (err) {
         setError(err as Error);
         throw err;
@@ -220,6 +240,6 @@ export const useUserRecipes = (userId: string | undefined) => {
     createRecipe,
     updateRecipe,
     deleteRecipe,
-    refetch: fetchUserRecipes,
+    refetch: fetchUserRecipes
   };
 };

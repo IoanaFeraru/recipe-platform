@@ -1,3 +1,31 @@
+/**
+ * RecipeIngredients component.
+ *
+ * Provides a presentational, read-only view of a recipe’s ingredients list.
+ * This module is intentionally free of business logic: all quantity scaling
+ * and formatting is delegated to the parent layer and injected via callback.
+ *
+ * Responsibilities:
+ * - Render a styled list of ingredients for a recipe
+ * - Display quantities already scaled/formatted by the caller
+ * - Preserve ordering and provide simple visual indexing
+ *
+ * Design considerations:
+ * - Uses a card-style container consistent with the application design system
+ * - Numbers ingredients to improve scanability for users while cooking
+ * - Separates list items into a memoized subcomponent to reduce re-renders
+ *
+ * Performance considerations:
+ * - `IngredientItem` is memoized to avoid unnecessary re-renders when
+ *   unrelated parent state changes
+ *
+ * Accessibility notes:
+ * - Uses semantic list markup (`ul` / `li`) for screen reader compatibility
+ * - Text content is provided in plain strings for easy narration
+ *
+ * @module RecipeIngredients
+ */
+
 "use client";
 
 import React from "react";
@@ -8,10 +36,6 @@ interface RecipeIngredientsProps {
   getScaledIngredientText: (ingredient: Ingredient) => string;
 }
 
-/**
- * RecipeIngredients - Displays ingredients list with scaled quantities
- * Pure presentational component that receives pre-formatted text
- */
 export const RecipeIngredients: React.FC<RecipeIngredientsProps> = ({
   ingredients,
   getScaledIngredientText,
@@ -34,10 +58,6 @@ export const RecipeIngredients: React.FC<RecipeIngredientsProps> = ({
   );
 };
 
-/**
- * IngredientItem - Individual ingredient list item
- * Memoized for performance when list is large
- */
 const IngredientItem: React.FC<{ text: string; index: number }> = React.memo(
   ({ text, index }) => (
     <li className="flex items-start gap-3">

@@ -1,3 +1,39 @@
+/**
+ * RecipeModal component.
+ *
+ * Modal-based recipe editor that orchestrates the full create/edit workflow by
+ * composing focused child form sections (basic info, dietary options, time inputs,
+ * images, ingredients, steps, and tags). The component owns transient UI state,
+ * normalizes/validates draft data via `useRecipeValidation`, uploads images to
+ * Firebase Storage with progress tracking, and submits a consolidated recipe
+ * payload through the provided `onSubmit` callback.
+ *
+ * Responsibilities:
+ * - Maintain local form state for all recipe fields (create and edit modes)
+ * - Hydrate state from `editRecipe` when provided; otherwise reset to defaults
+ * - Build a normalized validation draft and surface field errors from Zod schema
+ * - Enforce image file validation for main and step images
+ * - Upload images with resumable progress reporting and resolve download URLs
+ * - Normalize and sanitize user input (trim strings, parse numbers, split tags)
+ * - Require an authenticated user before persisting changes
+ * - Render a guarded UI inside `ComponentErrorBoundary` to prevent modal crashes
+ *
+ * Business/UI rules:
+ * - Submission is blocked when validation fails
+ * - Servings is coerced to a positive integer (minimum 1)
+ * - Dietary dependency: selecting "vegan" implies "vegetarian"; "vegetarian" is locked when vegan is selected
+ * - Passive time fields are included only when `hasPassiveTime` is true
+ * - Ingredient rows and steps are filtered to non-empty entries before submission
+ *
+ * Data/side effects:
+ * - Uses Firebase Auth `currentUser` to gate submissions and to populate `authorName`
+ * - Uses Firebase Storage resumable uploads to provide per-file progress updates
+ * - Uses object URLs for immediate local previews before upload
+ *
+ * @param {RecipeModalProps} props - Modal state, callbacks, and optional recipe to edit.
+ * @returns A modal dialog for creating or editing a recipe, or null when closed.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -35,12 +71,6 @@ interface RecipeModalProps {
   editRecipe?: any;
 }
 
-/**
- * RecipeModal - Main orchestrator component
- * Coordinates child components and handles form submission
- *
- * Reduced from 650+ lines to ~180 lines (72% reduction)
- */
 export default function RecipeModal({
   isOpen,
   onClose,
@@ -126,7 +156,6 @@ export default function RecipeModal({
       );
       setStepsProgress(editRecipe.steps.map(() => 0));
 
-      // Time
       setMinActiveHours(Math.floor(editRecipe.minActivePrepTime / 60));
       setMinActiveMinutes(editRecipe.minActivePrepTime % 60);
       setMaxActiveHours(Math.floor(editRecipe.maxActivePrepTime / 60));
@@ -143,7 +172,6 @@ export default function RecipeModal({
       setMainImagePreview(editRecipe.imageUrl || "");
       setMainImageFile(null);
     } else {
-      // Reset form
       setTitle("");
       setDescription("");
       setServings(4);
@@ -169,7 +197,6 @@ export default function RecipeModal({
     }
   }, [editRecipe]);
 
-  // Handlers
   const handleMainImageChange = (file: File) => {
     const validation = validateImageFile(file);
     if (!validation.isValid) {
@@ -227,6 +254,7 @@ export default function RecipeModal({
     return new Promise((resolve, reject) => {
       const storageRef = ref(storage, path);
       const uploadTask = uploadBytesResumable(storageRef, file);
+
       uploadTask.on(
         "state_changed",
         (snapshot) => {
@@ -295,18 +323,20 @@ export default function RecipeModal({
       const stepsWithImages = await Promise.all(
         validSteps.map(async (step, idx) => {
           let imageUrl = step.imageUrl || null;
+
           if (step.imageFile) {
             imageUrl = await uploadImageWithProgress(
               step.imageFile,
               `recipes/steps/${Date.now()}_${step.imageFile.name}`,
               (p) =>
                 setStepsProgress((prev) => {
-                  const newProgress = [...prev];
-                  newProgress[idx] = p;
-                  return newProgress;
+                  const next = [...prev];
+                  next[idx] = p;
+                  return next;
                 })
             );
           }
+
           return { text: step.text, imageUrl };
         })
       );
@@ -328,6 +358,7 @@ export default function RecipeModal({
       if (mainImageUrl) recipeData.imageUrl = mainImageUrl;
       if (difficulty) recipeData.difficulty = difficulty;
       if (mealType) recipeData.mealType = mealType;
+
       if (hasPassiveTime) {
         recipeData.minPassiveTime = minPassiveTime;
         recipeData.maxPassiveTime = maxPassiveTime;
@@ -349,149 +380,137 @@ export default function RecipeModal({
     <ComponentErrorBoundary componentName="RecipeModal">
       <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 p-4">
         <div className="bg-(--color-bg) rounded-l-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[8px_8px_0_0_var(--color-shadow)]">
-        {/* Header */}
-        <RecipeModalHeader
-          isEditing={!!editRecipe}
-          onClose={onClose}
-          disabled={isSubmitting}
-        />
-
-        {/* Content */}
-        <div className="overflow-y-auto flex-1 p-5 space-y-5">
-          {/* Basic Info */}
-          <BasicInfoForm
-            title={title}
-            description={description}
-            servings={servings}
-            difficulty={difficulty}
-            mealType={mealType}
-            onTitleChange={setTitle}
-            onDescriptionChange={setDescription}
-            onServingsChange={setServings}
-            onDifficultyChange={setDifficulty}
-            onMealTypeChange={setMealType}
-            errors={errors}
+          <RecipeModalHeader
+            isEditing={!!editRecipe}
+            onClose={onClose}
+            disabled={isSubmitting}
           />
 
-          {/* Dietary Options */}
-          <DietaryOptionsSelector selected={dietary} onToggle={toggleDietary} />
-
-          {/* Time */}
-          <TimeInputSection
-            minActiveHours={minActiveHours}
-            minActiveMinutes={minActiveMinutes}
-            maxActiveHours={maxActiveHours}
-            maxActiveMinutes={maxActiveMinutes}
-            minPassiveHours={minPassiveHours}
-            minPassiveMinutes={minPassiveMinutes}
-            maxPassiveHours={maxPassiveHours}
-            maxPassiveMinutes={maxPassiveMinutes}
-            hasPassiveTime={hasPassiveTime}
-            onMinActiveHoursChange={setMinActiveHours}
-            onMinActiveMinutesChange={setMinActiveMinutes}
-            onMaxActiveHoursChange={setMaxActiveHours}
-            onMaxActiveMinutesChange={setMaxActiveMinutes}
-            onMinPassiveHoursChange={setMinPassiveHours}
-            onMinPassiveMinutesChange={setMinPassiveMinutes}
-            onMaxPassiveHoursChange={setMaxPassiveHours}
-            onMaxPassiveMinutesChange={setMaxPassiveMinutes}
-            onHasPassiveTimeChange={setHasPassiveTime}
-            errors={errors}
-          />
-
-          {/* Main Image */}
-          <ImageUploadSection
-            preview={mainImagePreview}
-            progress={mainImageProgress}
-            isUploading={isSubmitting && !!mainImageFile}
-            onChange={handleMainImageChange}
-          />
-
-          {/* Ingredients */}
-          <IngredientsSection
-            ingredients={ingredients}
-            onAdd={() =>
-              setIngredients([
-                ...ingredients,
-                { name: "", quantity: undefined, unit: "", notes: "" },
-              ])
-            }
-            onRemove={(i) =>
-              setIngredients(ingredients.filter((_, idx) => idx !== i))
-            }
-            onUpdate={(i, field, value) => {
-              const updated = [...ingredients];
-              updated[i] = { ...updated[i], [field]: value };
-              setIngredients(updated);
-            }}
-            errors={errors}
-          />
-
-          {/* Steps */}
-          <StepsSection
-            steps={steps}
-            stepsProgress={stepsProgress}
-            onAdd={() => {
-              setSteps([
-                ...steps,
-                { text: "", imageUrl: undefined, imageFile: undefined },
-              ]);
-              setStepsProgress((prev) => [...prev, 0]);
-            }}
-            onRemove={(i) => {
-              setSteps(steps.filter((_, idx) => idx !== i));
-              setStepsProgress((prev) => prev.filter((_, idx) => idx !== i));
-            }}
-            onUpdateText={(i, value) => {
-              const updated = [...steps];
-              updated[i].text = value;
-              setSteps(updated);
-            }}
-            onUpdateImage={handleStepImageChange}
-            errors={errors}
-          />
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-(--color-text)">
-              Tags
-            </label>
-            <input
-              type="text"
-              className="w-full border-2 border-(--color-border) rounded-lg p-2.5 bg-(--color-bg-secondary) text-(--color-text)"
-              placeholder="dessert, baking, quick (comma separated)"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
+          <div className="overflow-y-auto flex-1 p-5 space-y-5">
+            <BasicInfoForm
+              title={title}
+              description={description}
+              servings={servings}
+              difficulty={difficulty}
+              mealType={mealType}
+              onTitleChange={setTitle}
+              onDescriptionChange={setDescription}
+              onServingsChange={setServings}
+              onDifficultyChange={setDifficulty}
+              onMealTypeChange={setMealType}
+              errors={errors}
             />
+
+            <DietaryOptionsSelector selected={dietary} onToggle={toggleDietary} />
+
+            <TimeInputSection
+              minActiveHours={minActiveHours}
+              minActiveMinutes={minActiveMinutes}
+              maxActiveHours={maxActiveHours}
+              maxActiveMinutes={maxActiveMinutes}
+              minPassiveHours={minPassiveHours}
+              minPassiveMinutes={minPassiveMinutes}
+              maxPassiveHours={maxPassiveHours}
+              maxPassiveMinutes={maxPassiveMinutes}
+              hasPassiveTime={hasPassiveTime}
+              onMinActiveHoursChange={setMinActiveHours}
+              onMinActiveMinutesChange={setMinActiveMinutes}
+              onMaxActiveHoursChange={setMaxActiveHours}
+              onMaxActiveMinutesChange={setMaxActiveMinutes}
+              onMinPassiveHoursChange={setMinPassiveHours}
+              onMinPassiveMinutesChange={setMinPassiveMinutes}
+              onMaxPassiveHoursChange={setMaxPassiveHours}
+              onMaxPassiveMinutesChange={setMaxPassiveMinutes}
+              onHasPassiveTimeChange={setHasPassiveTime}
+              errors={errors}
+            />
+
+            <ImageUploadSection
+              preview={mainImagePreview}
+              progress={mainImageProgress}
+              isUploading={isSubmitting && !!mainImageFile}
+              onChange={handleMainImageChange}
+            />
+
+            <IngredientsSection
+              ingredients={ingredients}
+              onAdd={() =>
+                setIngredients([
+                  ...ingredients,
+                  { name: "", quantity: undefined, unit: "", notes: "" },
+                ])
+              }
+              onRemove={(i) =>
+                setIngredients(ingredients.filter((_, idx) => idx !== i))
+              }
+              onUpdate={(i, field, value) => {
+                const updated = [...ingredients];
+                updated[i] = { ...updated[i], [field]: value };
+                setIngredients(updated);
+              }}
+              errors={errors}
+            />
+
+            <StepsSection
+              steps={steps}
+              stepsProgress={stepsProgress}
+              onAdd={() => {
+                setSteps([
+                  ...steps,
+                  { text: "", imageUrl: undefined, imageFile: undefined },
+                ]);
+                setStepsProgress((prev) => [...prev, 0]);
+              }}
+              onRemove={(i) => {
+                setSteps(steps.filter((_, idx) => idx !== i));
+                setStepsProgress((prev) => prev.filter((_, idx) => idx !== i));
+              }}
+              onUpdateText={(i, value) => {
+                const updated = [...steps];
+                updated[i].text = value;
+                setSteps(updated);
+              }}
+              onUpdateImage={handleStepImageChange}
+              errors={errors}
+            />
+
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-(--color-text)">
+                Tags
+              </label>
+              <input
+                type="text"
+                className="w-full border-2 border-(--color-border) rounded-lg p-2.5 bg-(--color-bg-secondary) text-(--color-text)"
+                placeholder="dessert, baking, quick (comma separated)"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 p-5 border-t-2 border-(--color-border) bg-(--color-bg-secondary) rounded-bl-3xl">
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting || !isValid}
+              className="flex-1 bg-(--color-primary) text-white py-3 rounded-full font-semibold shadow-[4px_4px_0_0_var(--color-shadow)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSubmitting
+                ? editRecipe
+                  ? "Updating..."
+                  : "Creating..."
+                : editRecipe
+                ? "Update Recipe"
+                : "Create Recipe"}
+            </button>
+
+            <button
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-6 py-3 rounded-full border-2 border-(--color-border) text-(--color-text) font-semibold hover:bg-(--color-bg) transition disabled:opacity-50">
+              Cancel
+            </button>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="flex gap-3 p-5 border-t-2 border-(--color-border) bg-(--color-bg-secondary) rounded-bl-3xl">
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !isValid}
-            className="flex-1 bg-(--color-primary) text-white py-3 rounded-full font-semibold shadow-[4px_4px_0_0_var(--color-shadow)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting
-              ? editRecipe
-                ? "Updating..."
-                : "Creating..."
-              : editRecipe
-              ? "Update Recipe"
-              : "Create Recipe"}
-          </button>
-
-          <button
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="px-6 py-3 rounded-full border-2 border-(--color-border) text-(--color-text) font-semibold hover:bg-(--color-bg) transition disabled:opacity-50"
-          >
-            Cancel
-          </button>
-        </div>
       </div>
-    </div>
     </ComponentErrorBoundary>
   );
 }

@@ -1,5 +1,24 @@
 "use client";
 
+/**
+ * EmptyDashboard
+ *
+ * Dashboard-specific empty state component displayed when the user
+ * has not created any recipes yet. Acts as a thin wrapper around the
+ * reusable EmptyState component, providing copy and actions tailored
+ * to the dashboard context.
+ *
+ * @component
+ *
+ * @param {Object} props
+ * @param {() => void} props.onCreateClick - Callback invoked when the user chooses to create their first recipe
+ *
+ * @example
+ * ```tsx
+ * <EmptyDashboard onCreateClick={() => setShowCreateModal(true)} />
+ * ```
+ */
+
 import React from "react";
 import { EmptyState } from "@/components/UI/EmptyState";
 
@@ -7,10 +26,6 @@ interface EmptyDashboardProps {
   onCreateClick: () => void;
 }
 
-/**
- * EmptyDashboard - Empty state for dashboard with custom styling
- * Wraps reusable EmptyState component with dashboard-specific props
- */
 export const EmptyDashboard: React.FC<EmptyDashboardProps> = ({
   onCreateClick,
 }) => {

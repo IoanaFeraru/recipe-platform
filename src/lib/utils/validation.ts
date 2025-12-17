@@ -1,18 +1,44 @@
 /**
- * Validation utility functions
+ * Centralized validation and sanitization utilities.
+ *
+ * This module provides reusable, framework-agnostic validation logic for:
+ * - authentication (email, password)
+ * - generic text, number, URL, and array inputs
+ * - recipe-specific business rules
+ * - comments and ratings
+ * - image uploads
+ * - batch and form-level validation
+ *
+ * The design goal is to keep validation logic deterministic, composable,
+ * and independent of UI concerns.
  */
+
+/* ======================================================
+ * CORE TYPES
+ * ====================================================== */
 
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
 }
 
-/**
- * Email validation
- */
+export interface PasswordStrength {
+  level: "weak" | "medium" | "strong";
+  score: number;
+  message: string;
+}
+
+export interface FormValidation {
+  isValid: boolean;
+  errors: Record<string, string>;
+}
+
+/* ======================================================
+ * EMAIL VALIDATION
+ * ====================================================== */
+
 export const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
 export const validateEmail = (email: string): ValidationResult => {
@@ -27,14 +53,9 @@ export const validateEmail = (email: string): ValidationResult => {
   return { isValid: true };
 };
 
-/**
- * Password validation
- */
-export interface PasswordStrength {
-  level: "weak" | "medium" | "strong";
-  score: number;
-  message: string;
-}
+/* ======================================================
+ * PASSWORD VALIDATION
+ * ====================================================== */
 
 export const getPasswordStrength = (password: string): PasswordStrength => {
   let score = 0;
@@ -44,41 +65,37 @@ export const getPasswordStrength = (password: string): PasswordStrength => {
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
 
-  if (score <= 1)
-    return {
-      level: "weak",
-      score,
-      message: "Too short or too simple",
-    };
-  if (score === 2)
+  if (score <= 1) {
+    return { level: "weak", score, message: "Too short or too simple" };
+  }
+
+  if (score === 2) {
     return {
       level: "medium",
       score,
-      message: "Add numbers or symbols for better security",
+      message: "Add numbers or symbols for better security"
     };
-  return {
-    level: "strong",
-    score,
-    message: "Strong password",
-  };
+  }
+
+  return { level: "strong", score, message: "Strong password" };
 };
 
 export const validatePassword = (password: string): ValidationResult => {
-  if (!password || password.length === 0) {
+  if (!password) {
     return { isValid: false, error: "Password is required" };
   }
 
   if (password.length < 6) {
     return {
       isValid: false,
-      error: "Password must be at least 6 characters",
+      error: "Password must be at least 6 characters"
     };
   }
 
   if (password.length > 128) {
     return {
       isValid: false,
-      error: "Password must be less than 128 characters",
+      error: "Password must be less than 128 characters"
     };
   }
 
@@ -96,9 +113,10 @@ export const validatePasswordMatch = (
   return { isValid: true };
 };
 
-/**
- * URL validation
- */
+/* ======================================================
+ * URL VALIDATION
+ * ====================================================== */
+
 export const isValidUrl = (url: string): boolean => {
   try {
     new URL(url);
@@ -120,9 +138,10 @@ export const validateUrl = (url: string): ValidationResult => {
   return { isValid: true };
 };
 
-/**
- * Text validation
- */
+/* ======================================================
+ * TEXT VALIDATION
+ * ====================================================== */
+
 export const validateRequiredText = (
   text: string,
   fieldName: string = "Field"
@@ -145,23 +164,24 @@ export const validateTextLength = (
   if (length < minLength) {
     return {
       isValid: false,
-      error: `${fieldName} must be at least ${minLength} characters`,
+      error: `${fieldName} must be at least ${minLength} characters`
     };
   }
 
   if (length > maxLength) {
     return {
       isValid: false,
-      error: `${fieldName} must be less than ${maxLength} characters`,
+      error: `${fieldName} must be less than ${maxLength} characters`
     };
   }
 
   return { isValid: true };
 };
 
-/**
- * Number validation
- */
+/* ======================================================
+ * NUMBER VALIDATION
+ * ====================================================== */
+
 export const isPositiveNumber = (value: any): boolean => {
   const num = Number(value);
   return !isNaN(num) && num > 0;
@@ -181,7 +201,10 @@ export const validatePositiveNumber = (
   }
 
   if (!isPositiveNumber(value)) {
-    return { isValid: false, error: `${fieldName} must be a positive number` };
+    return {
+      isValid: false,
+      error: `${fieldName} must be a positive number`
+    };
   }
 
   return { isValid: true };
@@ -202,16 +225,17 @@ export const validateNumberRange = (
   if (num < min || num > max) {
     return {
       isValid: false,
-      error: `${fieldName} must be between ${min} and ${max}`,
+      error: `${fieldName} must be between ${min} and ${max}`
     };
   }
 
   return { isValid: true };
 };
 
-/**
- * Recipe-specific validation
- */
+/* ======================================================
+ * RECIPE-SPECIFIC VALIDATION
+ * ====================================================== */
+
 export const validateServings = (servings: any): ValidationResult => {
   const num = Number(servings);
 
@@ -273,20 +297,24 @@ export const validatePrepTime = (
   if (minTime > maxTime) {
     return {
       isValid: false,
-      error: "Minimum time cannot exceed maximum time",
+      error: "Minimum time cannot exceed maximum time"
     };
   }
 
   if (maxTime === 0) {
-    return { isValid: false, error: "Maximum time must be greater than 0" };
+    return {
+      isValid: false,
+      error: "Maximum time must be greater than 0"
+    };
   }
 
   return { isValid: true };
 };
 
-/**
- * Tag validation
- */
+/* ======================================================
+ * TAG VALIDATION
+ * ====================================================== */
+
 export const validateTag = (tag: string): ValidationResult => {
   const trimmed = tag.trim();
 
@@ -295,13 +323,17 @@ export const validateTag = (tag: string): ValidationResult => {
   }
 
   if (trimmed.length > 30) {
-    return { isValid: false, error: "Tag must be less than 30 characters" };
+    return {
+      isValid: false,
+      error: "Tag must be less than 30 characters"
+    };
   }
 
   if (!/^[a-zA-Z0-9\s-]+$/.test(trimmed)) {
     return {
       isValid: false,
-      error: "Tag can only contain letters, numbers, spaces, and hyphens",
+      error:
+        "Tag can only contain letters, numbers, spaces, and hyphens"
     };
   }
 
@@ -310,7 +342,7 @@ export const validateTag = (tag: string): ValidationResult => {
 
 export const validateTags = (tags: string[]): ValidationResult => {
   if (tags.length === 0) {
-    return { isValid: true }; // Tags are optional
+    return { isValid: true };
   }
 
   if (tags.length > 10) {
@@ -319,31 +351,34 @@ export const validateTags = (tags: string[]): ValidationResult => {
 
   for (const tag of tags) {
     const result = validateTag(tag);
-    if (!result.isValid) {
-      return result;
-    }
+    if (!result.isValid) return result;
   }
 
   return { isValid: true };
 };
 
-/**
- * Array validation
- */
+/* ======================================================
+ * ARRAY VALIDATION
+ * ====================================================== */
+
 export const validateNonEmptyArray = (
   array: any[],
   fieldName: string = "Items"
 ): ValidationResult => {
   if (!Array.isArray(array) || array.length === 0) {
-    return { isValid: false, error: `At least one ${fieldName} is required` };
+    return {
+      isValid: false,
+      error: `At least one ${fieldName} is required`
+    };
   }
 
   return { isValid: true };
 };
 
-/**
- * Comment validation
- */
+/* ======================================================
+ * COMMENT VALIDATION
+ * ====================================================== */
+
 export const validateComment = (
   text: string,
   rating?: number | null
@@ -361,18 +396,20 @@ export const validateComment = (
   return { isValid: true };
 };
 
-/**
- * File validation
- */
+/* ======================================================
+ * IMAGE VALIDATION
+ * ====================================================== */
+
 export const MAX_FILE_SIZE_MB = 5;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 export const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
   "image/jpg",
   "image/png",
   "image/webp",
   "image/heic",
-  "image/heif",
+  "image/heif"
 ];
 
 export const validateImageFile = (file: File): ValidationResult => {
@@ -383,66 +420,38 @@ export const validateImageFile = (file: File): ValidationResult => {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return {
       isValid: false,
-      error: "Invalid file type. Please upload JPG, PNG, or WebP",
+      error: "Invalid file type. Please upload JPG, PNG, or WebP"
     };
   }
 
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return {
       isValid: false,
-      error: `File size too large. Maximum size is ${MAX_FILE_SIZE_MB}MB`,
+      error: `File size too large. Maximum size is ${MAX_FILE_SIZE_MB}MB`
     };
   }
 
   return { isValid: true };
 };
 
-/**
- * Batch validation
- */
+/* ======================================================
+ * BATCH & FORM VALIDATION
+ * ====================================================== */
+
 export const validateMultiple = (
   validations: ValidationResult[]
 ): ValidationResult => {
   const errors = validations
-    .filter((v) => !v.isValid)
-    .map((v) => v.error)
+    .filter(v => !v.isValid)
+    .map(v => v.error)
     .filter(Boolean) as string[];
 
   if (errors.length > 0) {
-    return {
-      isValid: false,
-      error: errors.join("; "),
-    };
+    return { isValid: false, error: errors.join("; ") };
   }
 
   return { isValid: true };
 };
-
-/**
- * Sanitization helpers
- */
-export const sanitizeText = (text: string): string => {
-  return text.trim().replace(/\s+/g, " ");
-};
-
-export const sanitizeEmail = (email: string): string => {
-  return email.trim().toLowerCase();
-};
-
-export const sanitizeTags = (tagsString: string): string[] => {
-  return tagsString
-    .split(",")
-    .map((tag) => sanitizeText(tag))
-    .filter((tag) => tag.length > 0);
-};
-
-/**
- * Form validation helper
- */
-export interface FormValidation {
-  isValid: boolean;
-  errors: Record<string, string>;
-}
 
 export const createFormValidation = (
   validations: Record<string, ValidationResult>
@@ -458,4 +467,23 @@ export const createFormValidation = (
   }
 
   return { isValid, errors };
+};
+
+/* ======================================================
+ * SANITIZATION
+ * ====================================================== */
+
+export const sanitizeText = (text: string): string => {
+  return text.trim().replace(/\s+/g, " ");
+};
+
+export const sanitizeEmail = (email: string): string => {
+  return email.trim().toLowerCase();
+};
+
+export const sanitizeTags = (tagsString: string): string[] => {
+  return tagsString
+    .split(",")
+    .map(tag => sanitizeText(tag))
+    .filter(tag => tag.length > 0);
 };

@@ -1,3 +1,26 @@
+/**
+ * TimeInputSection component.
+ *
+ * Renders a structured time entry UI for recipe preparation, supporting:
+ * - Active preparation time (required) as a min/max range (hours + minutes)
+ * - Optional passive time (e.g., resting, chilling, baking) as a min/max range
+ *   gated behind a boolean toggle (`hasPassiveTime`)
+ *
+ * This component is presentation-focused: it does not derive totals or enforce
+ * cross-field business rules itself (e.g., min <= max). Instead, it delegates
+ * state updates to the parent via callback props, and surfaces validation
+ * feedback through the `errors` prop.
+ *
+ * Input constraints and UX:
+ * - Hours are non-negative integers
+ * - Minutes are constrained to 0–59
+ * - Empty numeric inputs are normalized to 0 via `parseInt(...) || 0`
+ * - Passive time inputs are conditionally rendered only when enabled
+ *
+ * @param {TimeInputSectionProps} props - Controlled values and change handlers for time fields.
+ * @returns A time editor section with active time range and optional passive time range.
+ */
+
 "use client";
 
 import React from "react";
@@ -77,9 +100,13 @@ export const TimeInputSection: React.FC<TimeInputSectionProps> = ({
               className="w-full border border-(--color-border) rounded p-2 bg-(--color-bg) text-(--color-text) text-sm"
               placeholder="0"
               value={minActiveHours || ""}
-              onChange={(e) => onMinActiveHoursChange(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                onMinActiveHoursChange(parseInt(e.target.value) || 0)
+              }
             />
-            <span className="text-xs self-center text-(--color-text-muted)">h</span>
+            <span className="text-xs self-center text-(--color-text-muted)">
+              h
+            </span>
             <input
               type="number"
               min="0"
@@ -87,9 +114,13 @@ export const TimeInputSection: React.FC<TimeInputSectionProps> = ({
               className="w-full border border-(--color-border) rounded p-2 bg-(--color-bg) text-(--color-text) text-sm"
               placeholder="0"
               value={minActiveMinutes || ""}
-              onChange={(e) => onMinActiveMinutesChange(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                onMinActiveMinutesChange(parseInt(e.target.value) || 0)
+              }
             />
-            <span className="text-xs self-center text-(--color-text-muted)">m</span>
+            <span className="text-xs self-center text-(--color-text-muted)">
+              m
+            </span>
           </div>
 
           {/* Max Time */}
@@ -100,9 +131,13 @@ export const TimeInputSection: React.FC<TimeInputSectionProps> = ({
               className="w-full border border-(--color-border) rounded p-2 bg-(--color-bg) text-(--color-text) text-sm"
               placeholder="0"
               value={maxActiveHours || ""}
-              onChange={(e) => onMaxActiveHoursChange(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                onMaxActiveHoursChange(parseInt(e.target.value) || 0)
+              }
             />
-            <span className="text-xs self-center text-(--color-text-muted)">h</span>
+            <span className="text-xs self-center text-(--color-text-muted)">
+              h
+            </span>
             <input
               type="number"
               min="0"
@@ -110,9 +145,13 @@ export const TimeInputSection: React.FC<TimeInputSectionProps> = ({
               className="w-full border border-(--color-border) rounded p-2 bg-(--color-bg) text-(--color-text) text-sm"
               placeholder="0"
               value={maxActiveMinutes || ""}
-              onChange={(e) => onMaxActiveMinutesChange(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                onMaxActiveMinutesChange(parseInt(e.target.value) || 0)
+              }
             />
-            <span className="text-xs self-center text-(--color-text-muted)">m</span>
+            <span className="text-xs self-center text-(--color-text-muted)">
+              m
+            </span>
           </div>
         </div>
       </div>
@@ -139,9 +178,13 @@ export const TimeInputSection: React.FC<TimeInputSectionProps> = ({
               className="w-full border border-(--color-border) rounded p-2 bg-(--color-bg) text-(--color-text) text-sm"
               placeholder="0"
               value={minPassiveHours || ""}
-              onChange={(e) => onMinPassiveHoursChange(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                onMinPassiveHoursChange(parseInt(e.target.value) || 0)
+              }
             />
-            <span className="text-xs self-center text-(--color-text-muted)">h</span>
+            <span className="text-xs self-center text-(--color-text-muted)">
+              h
+            </span>
             <input
               type="number"
               min="0"
@@ -149,9 +192,13 @@ export const TimeInputSection: React.FC<TimeInputSectionProps> = ({
               className="w-full border border-(--color-border) rounded p-2 bg-(--color-bg) text-(--color-text) text-sm"
               placeholder="0"
               value={minPassiveMinutes || ""}
-              onChange={(e) => onMinPassiveMinutesChange(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                onMinPassiveMinutesChange(parseInt(e.target.value) || 0)
+              }
             />
-            <span className="text-xs self-center text-(--color-text-muted)">m</span>
+            <span className="text-xs self-center text-(--color-text-muted)">
+              m
+            </span>
           </div>
 
           {/* Max Passive Time */}
@@ -162,9 +209,13 @@ export const TimeInputSection: React.FC<TimeInputSectionProps> = ({
               className="w-full border border-(--color-border) rounded p-2 bg-(--color-bg) text-(--color-text) text-sm"
               placeholder="0"
               value={maxPassiveHours || ""}
-              onChange={(e) => onMaxPassiveHoursChange(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                onMaxPassiveHoursChange(parseInt(e.target.value) || 0)
+              }
             />
-            <span className="text-xs self-center text-(--color-text-muted)">h</span>
+            <span className="text-xs self-center text-(--color-text-muted)">
+              h
+            </span>
             <input
               type="number"
               min="0"
@@ -172,9 +223,13 @@ export const TimeInputSection: React.FC<TimeInputSectionProps> = ({
               className="w-full border border-(--color-border) rounded p-2 bg-(--color-bg) text-(--color-text) text-sm"
               placeholder="0"
               value={maxPassiveMinutes || ""}
-              onChange={(e) => onMaxPassiveMinutesChange(parseInt(e.target.value) || 0)}
+              onChange={(e) =>
+                onMaxPassiveMinutesChange(parseInt(e.target.value) || 0)
+              }
             />
-            <span className="text-xs self-center text-(--color-text-muted)">m</span>
+            <span className="text-xs self-center text-(--color-text-muted)">
+              m
+            </span>
           </div>
         </div>
       )}

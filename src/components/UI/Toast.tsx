@@ -1,6 +1,28 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+/**
+ * Toast notification context and UI layer.
+ *
+ * Provides an application-wide toast system via React Context, exposing:
+ * - `addToast` / `removeToast` for low-level control
+ * - convenience helpers (`success`, `error`, `warning`, `info`) for common cases
+ *
+ * The provider renders a fixed-position toast container and manages lifecycle
+ * concerns such as:
+ * - unique toast ID generation
+ * - auto-dismiss timers (configurable per toast)
+ * - manual dismiss with a short exit transition
+ *
+ * Intended usage is to wrap the app shell (e.g., Next.js `layout.tsx`) with
+ * `ToastProvider`, then call `useToast()` from any descendant component.
+ */
+
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+} from "react";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -24,11 +46,14 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | null>(null);
 
-const TOAST_STYLES: Record<ToastType, {
-  bg: string;
-  border: string;
-  icon: string;
-}> = {
+const TOAST_STYLES: Record<
+  ToastType,
+  {
+    bg: string;
+    border: string;
+    icon: string;
+  }
+> = {
   success: {
     bg: "bg-green-50",
     border: "border-green-400",
@@ -53,50 +78,59 @@ const TOAST_STYLES: Record<ToastType, {
 
 const DEFAULT_DURATION = 5000;
 
-/**
- * ToastProvider - Context provider for toast notifications
- * Wrap your app with this to enable toasts
- * 
- * @example
- * // In layout.tsx
- * <ToastProvider>
- *   {children}
- * </ToastProvider>
- */
-export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const addToast = useCallback((toast: Omit<Toast, "id">) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const newToast: Toast = { ...toast, id };
-    
-    setToasts((prev) => [...prev, newToast]);
+  const addToast = useCallback(
+    (toast: Omit<Toast, "id">) => {
+      const id = `toast-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`;
 
-    const duration = toast.duration ?? DEFAULT_DURATION;
-    if (duration > 0) {
-      setTimeout(() => removeToast(id), duration);
-    }
-  }, [removeToast]);
+      const newToast: Toast = { ...toast, id };
+      setToasts((prev) => [...prev, newToast]);
 
-  const success = useCallback((message: string, title?: string) => {
-    addToast({ type: "success", message, title });
-  }, [addToast]);
+      const duration = toast.duration ?? DEFAULT_DURATION;
+      if (duration > 0) {
+        window.setTimeout(() => removeToast(id), duration);
+      }
+    },
+    [removeToast]
+  );
 
-  const error = useCallback((message: string, title?: string) => {
-    addToast({ type: "error", message, title, duration: 7000 });
-  }, [addToast]);
+  const success = useCallback(
+    (message: string, title?: string) => {
+      addToast({ type: "success", message, title });
+    },
+    [addToast]
+  );
 
-  const warning = useCallback((message: string, title?: string) => {
-    addToast({ type: "warning", message, title });
-  }, [addToast]);
+  const error = useCallback(
+    (message: string, title?: string) => {
+      addToast({ type: "error", message, title, duration: 7000 });
+    },
+    [addToast]
+  );
 
-  const info = useCallback((message: string, title?: string) => {
-    addToast({ type: "info", message, title });
-  }, [addToast]);
+  const warning = useCallback(
+    (message: string, title?: string) => {
+      addToast({ type: "warning", message, title });
+    },
+    [addToast]
+  );
+
+  const info = useCallback(
+    (message: string, title?: string) => {
+      addToast({ type: "info", message, title });
+    },
+    [addToast]
+  );
 
   return (
     <ToastContext.Provider
@@ -108,18 +142,6 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-/**
- * useToast - Hook to access toast functions
- * 
- * @example
- * const { success, error } = useToast();
- * 
- * // Show success toast
- * success("Recipe saved successfully!");
- * 
- * // Show error toast
- * error("Failed to save recipe", "Error");
- */
 export const useToast = (): ToastContextType => {
   const context = useContext(ToastContext);
   if (!context) {
@@ -128,9 +150,6 @@ export const useToast = (): ToastContextType => {
   return context;
 };
 
-/**
- * ToastContainer - Renders toast notifications
- */
 const ToastContainer: React.FC<{
   toasts: Toast[];
   onRemove: (id: string) => void;
@@ -150,9 +169,6 @@ const ToastContainer: React.FC<{
   );
 };
 
-/**
- * ToastItem - Individual toast notification
- */
 const ToastItem: React.FC<{
   toast: Toast;
   onRemove: (id: string) => void;
@@ -162,7 +178,7 @@ const ToastItem: React.FC<{
 
   const handleRemove = useCallback(() => {
     setIsExiting(true);
-    setTimeout(() => onRemove(toast.id), 200);
+    window.setTimeout(() => onRemove(toast.id), 200);
   }, [toast.id, onRemove]);
 
   return (
@@ -178,18 +194,18 @@ const ToastItem: React.FC<{
     >
       <div className="flex items-start gap-3">
         <span className="text-xl shrink-0">{styles.icon}</span>
+
         <div className="flex-1">
           {toast.title && (
             <h4 className="font-semibold text-(--color-text) mb-1">
               {toast.title}
             </h4>
           )}
-          <p className="text-(--color-text-muted) text-sm">
-            {toast.message}
-          </p>
+
+          <p className="text-(--color-text-muted) text-sm">{toast.message}</p>
         </div>
       </div>
-      
+
       <button
         onClick={handleRemove}
         className="absolute top-2 right-2 text-(--color-text-muted) hover:text-(--color-text) transition p-1"

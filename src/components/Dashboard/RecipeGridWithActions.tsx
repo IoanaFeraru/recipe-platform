@@ -1,5 +1,32 @@
 "use client";
 
+/**
+ * RecipeGridWithActions
+ *
+ * Renders a responsive grid of recipe cards enhanced with contextual
+ * edit and delete actions. Action buttons are revealed on hover and
+ * allow recipe owners to manage their content directly from the grid.
+ *
+ * This component is typically used in authenticated contexts such as
+ * dashboards or profile pages where recipe management is required.
+ *
+ * @component
+ *
+ * @param {Object} props
+ * @param {Recipe[]} props.recipes - List of recipes to display in the grid
+ * @param {(recipe: Recipe) => void} props.onEdit - Callback triggered when the user selects the edit action
+ * @param {(recipeId: string, recipeName: string) => void} props.onDelete - Callback triggered when the user selects the delete action
+ *
+ * @example
+ * ```tsx
+ * <RecipeGridWithActions
+ *   recipes={myRecipes}
+ *   onEdit={(recipe) => setEditingRecipe(recipe)}
+ *   onDelete={(id, name) => confirmDelete(id, name)}
+ * />
+ * ```
+ */
+
 import React from "react";
 import RecipeCard from "@/components/RecipeCard/RecipeCard";
 import { Recipe } from "@/types/recipe";
@@ -10,10 +37,6 @@ interface RecipeGridWithActionsProps {
   onDelete: (recipeId: string, recipeName: string) => void;
 }
 
-/**
- * RecipeGridWithActions - Recipe grid with edit/delete action overlays
- * Displays recipes in responsive grid with hover actions
- */
 export const RecipeGridWithActions: React.FC<RecipeGridWithActionsProps> = ({
   recipes,
   onEdit,

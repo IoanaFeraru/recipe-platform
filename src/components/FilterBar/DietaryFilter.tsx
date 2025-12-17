@@ -1,5 +1,31 @@
 "use client";
 
+/**
+ * DietaryFilter component.
+ *
+ * Provides a multi-select interface for filtering recipes by dietary
+ * preferences (e.g., vegetarian, vegan, gluten-free). Users can toggle
+ * individual dietary options on or off, and the component emits the
+ * updated selection set to its parent.
+ *
+ * Responsibilities:
+ * - Render all supported dietary options as selectable badges
+ * - Maintain selection state externally via controlled props
+ * - Notify parent components of selection changes
+ *
+ * Behavior:
+ * - Clicking a badge toggles its presence in the dietary filter list
+ * - Selected options are visually emphasized
+ * - Displays a count of selected dietary filters when applicable
+ *
+ * Design notes:
+ * - Uses a badge-style button layout for quick scanning and interaction
+ * - Color and scale changes provide immediate visual feedback
+ * - Stateless and fully controlled by props for predictable behavior
+ *
+ * @module DietaryFilter
+ */
+
 import React from "react";
 import { DietaryOption } from "@/types/recipe";
 
@@ -23,10 +49,6 @@ const DIETARY_OPTIONS: Array<{
   { value: "kosher", label: "Kosher", icon: "✡️" },
 ];
 
-/**
- * DietaryFilter - Multi-select dietary restriction filter
- * Beautiful badge interface with toggle functionality
- */
 export const DietaryFilter: React.FC<DietaryFilterProps> = ({
   dietary,
   onDietaryChange,
@@ -35,6 +57,7 @@ export const DietaryFilter: React.FC<DietaryFilterProps> = ({
     const newDietary = dietary.includes(value)
       ? dietary.filter((d) => d !== value)
       : [...dietary, value];
+
     onDietaryChange(newDietary);
   };
 
@@ -48,6 +71,7 @@ export const DietaryFilter: React.FC<DietaryFilterProps> = ({
           </span>
         )}
       </label>
+
       <div className="flex flex-wrap gap-2">
         {DIETARY_OPTIONS.map((option) => (
           <button

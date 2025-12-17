@@ -1,5 +1,53 @@
 "use client";
 
+/**
+ * CommentItem
+ *
+ * Presentational component for rendering a single recipe comment and its threaded
+ * replies, including optional rating display, author avatar, relative timestamp,
+ * and authenticated user actions (reply and delete).
+ *
+ * Responsibilities:
+ * - Renders the comment header (author identity, owner badge, timestamp, avatar)
+ * - Shows a read-only star rating when present (top-level reviews)
+ * - Allows the comment author to delete their own comment (with confirmation)
+ * - Allows authenticated users to toggle a reply form and post a reply
+ * - Renders replies with special styling for recipe-owner responses
+ *
+ * Data requirements:
+ * - `comment` is the top-level comment to display
+ * - `replies` should be pre-filtered to only those belonging to `comment.id`
+ * - `userAvatars` is a lookup map keyed by userId for avatar URLs
+ *
+ * Note: This component does not fetch data or enforce server-side authorization.
+ * Deletion and reply persistence are delegated to parent callbacks.
+ *
+ * @component
+ *
+ * @param {Object} props
+ * @param {Comment} props.comment - The top-level comment to render
+ * @param {Comment[]} props.replies - Replies for this comment (threaded children)
+ * @param {string} [props.currentUserId] - Current authenticated user ID (enables actions)
+ * @param {string} props.recipeOwnerId - Recipe owner user ID (for owner badges/styling)
+ * @param {(id: string) => void} props.onDelete - Invoked when a comment/reply should be deleted
+ * @param {(parentId: string, text: string) => Promise<void>} props.onReply
+ *        Invoked when posting a reply to the parent comment
+ * @param {Record<string, string>} props.userAvatars - Map of userId -> avatar URL
+ *
+ * @example
+ * ```tsx
+ * <CommentItem
+ *   comment={comment}
+ *   replies={getReplies(comment.id)}
+ *   currentUserId={user?.uid}
+ *   recipeOwnerId={recipe.authorId}
+ *   onDelete={deleteComment}
+ *   onReply={addReply}
+ *   userAvatars={avatarMap}
+ * />
+ * ```
+ */
+
 import { useState } from "react";
 import { Comment } from "@/types/comment";
 import StarRating from "./StarRating";

@@ -1,5 +1,43 @@
 "use client";
 
+/**
+ * FormField
+ *
+ * Reusable form field abstraction that standardizes form inputs across the
+ * application. Encapsulates label rendering, accessibility attributes,
+ * validation error display, and optional custom input rendering.
+ *
+ * Responsibilities:
+ * - Render a labeled form control with consistent styling
+ * - Support common input attributes (type, placeholder, autocomplete, disabled)
+ * - Display validation errors with proper ARIA semantics
+ * - Allow full override of the input via `children` for advanced use cases
+ *
+ * Accessibility:
+ * - Associates label and input via `htmlFor` / `id`
+ * - Exposes validation state through `aria-invalid`
+ * - Links error messages using `aria-describedby`
+ * - Uses `role="alert"` for screen reader announcements
+ *
+ * Usage Patterns:
+ * - Default text-based inputs (email, password, text, etc.)
+ * - Custom inputs (selects, textareas, masked inputs) via `children`
+ *
+ * @component
+ *
+ * @example
+ * ```tsx
+ * <FormField
+ *   label="Email"
+ *   name="email"
+ *   type="email"
+ *   value={email}
+ *   onChange={setEmail}
+ *   error={errors.email}
+ *   required
+ * />
+ * ```
+ */
 import React from "react";
 
 interface FormFieldProps {
@@ -17,20 +55,6 @@ interface FormFieldProps {
   children?: React.ReactNode;
 }
 
-/**
- * FormField - Reusable form field component
- * Includes label, input, and error message
- * 
- * @example
- * <FormField
- *   label="Email"
- *   name="email"
- *   type="email"
- *   value={email}
- *   onChange={setEmail}
- *   error={errors.email}
- * />
- */
 export const FormField: React.FC<FormFieldProps> = ({
   label,
   name,
@@ -47,14 +71,14 @@ export const FormField: React.FC<FormFieldProps> = ({
 }) => {
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <label 
+      <label
         htmlFor={name}
         className="text-sm font-medium text-(--color-text)"
       >
         {label}
         {required && <span className="text-(--color-danger) ml-1">*</span>}
       </label>
-      
+
       {children ? (
         children
       ) : (
@@ -69,9 +93,9 @@ export const FormField: React.FC<FormFieldProps> = ({
           autoComplete={autoComplete}
           required={required}
           className={`
-            px-3 py-2 rounded-md 
-            border border-(--color-border) 
-            bg-(--color-bg) 
+            px-3 py-2 rounded-md
+            border border-(--color-border)
+            bg-(--color-bg)
             text-(--color-text)
             focus:outline-none focus:ring-2 focus:ring-(--color-primary)
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -82,9 +106,9 @@ export const FormField: React.FC<FormFieldProps> = ({
           aria-describedby={error ? `${name}-error` : undefined}
         />
       )}
-      
+
       {error && (
-        <p 
+        <p
           id={`${name}-error`}
           className="text-sm text-(--color-danger) mt-1"
           role="alert"

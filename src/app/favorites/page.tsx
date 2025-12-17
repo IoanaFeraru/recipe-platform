@@ -1,3 +1,28 @@
+/**
+ * FavoritesPage
+ *
+ * User-facing page that displays the currently authenticated user’s saved (favorited)
+ * recipes. The page acts as a container that delegates data access and mutations to
+ * `useFavorites`, and renders a responsive grid of `RecipeCard` components.
+ *
+ * Responsibilities:
+ * - Fetch the user’s favorites via `useFavorites(true)` (favorites-only mode)
+ * - Render clear UX states:
+ *   - Loading: spinner while favorites are being fetched
+ *   - Error: lightweight failure message when retrieval fails
+ *   - Empty: friendly empty-state prompt when no favorites exist
+ *   - Success: grid of `RecipeCard` items
+ * - Wrap the successful render path in `PageErrorBoundary` so unexpected UI/runtime
+ *   errors in the favorites view do not break application navigation
+ *
+ * Notes / Future Enhancement:
+ * - `clearAllFavorites` is intentionally wired but not exposed in the UI yet.
+ *   If enabled, it should be gated behind a confirmation dialog due to the
+ *   destructive nature of the action.
+ *
+ * @module FavoritesPage
+ */
+
 "use client";
 
 import { RecipeCard } from "@/components/RecipeCard";
@@ -5,12 +30,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function FavoritesPage() {
-  const {
-    favoriteRecipes,
-    loading,
-    error,
-    clearAllFavorites,
-  } = useFavorites(true);
+  const { favoriteRecipes, loading, error, clearAllFavorites } = useFavorites(true);
 
   if (loading) {
     return (
@@ -48,12 +68,15 @@ export default function FavoritesPage() {
             Your Favorite Recipes
           </h1>
 
-          <button
-            onClick={clearAllFavorites}
-            className="text-sm text-(--color-danger) hover:underline"
-          >
-            Clear all
-          </button>
+          {/*
+            Future: "Clear all" action (destructive). If enabled, add a confirmation modal.
+            <button
+              onClick={clearAllFavorites}
+              className="text-sm text-(--color-danger) hover:underline"
+            >
+              Clear all
+            </button>
+          */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

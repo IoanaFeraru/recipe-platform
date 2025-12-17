@@ -1,3 +1,18 @@
+"use client";
+
+/**
+ * Tag component.
+ *
+ * Renders a small, pill-shaped label used to represent categories, filters,
+ * or selected values. The component supports interactive and non-interactive
+ * modes, optional active styling, and an optional remove action.
+ *
+ * Typical use cases include filter chips, selected tags, or metadata labels
+ * within recipe cards and lists.
+ */
+
+import React from "react";
+
 interface TagProps {
   label: string;
   active?: boolean;
@@ -21,9 +36,10 @@ export default function Tag({
         inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm
         transition-all
         ${onClick ? "cursor-pointer hover:brightness-110" : ""}
-        ${active
-          ? "text-white border-(--color-primary)"
-          : "text-(--color-text-muted) border-(--color-border)"
+        ${
+          active
+            ? "text-white border-(--color-primary)"
+            : "text-(--color-text-muted) border-(--color-border)"
         }
       `}
       onClick={onClick}
@@ -37,6 +53,7 @@ export default function Tag({
             onRemove();
           }}
           className="ml-1 hover:text-(--color-danger)"
+          aria-label={`Remove ${label}`}
         >
           ×
         </button>

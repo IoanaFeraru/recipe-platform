@@ -3,33 +3,38 @@ import { RecipeModel } from "@/lib/models/Recipe.model";
 import { Ingredient } from "@/types/recipe";
 
 /**
- * useRecipeScaling - Custom hook for managing recipe servings and ingredient scaling
- * Encapsulates all scaling logic in one place
- * 
- * @param recipeModel - Recipe domain model
- * @returns Servings state and scaling utilities
+ * Hook for managing serving size and proportional ingredient scaling.
+ *
+ * Acts as a thin stateful wrapper around the RecipeModel’s scaling logic.
+ * The hook owns only the mutable UI state (current servings) and delegates
+ * all domain-specific calculations to the model.
+ *
+ * Behavior:
+ * - Defaults to the recipe’s original servings
+ * - Enforces a minimum of 1 serving
+ * - Recomputes scaled ingredients only when inputs change
+ * - Exposes helpers for increment/decrement, reset, and formatted display
  */
 export const useRecipeScaling = (recipeModel: RecipeModel | null) => {
   const [servings, setServings] = useState<number | undefined>(undefined);
 
-  // Initialize servings from recipe when it loads
   const currentServings = servings ?? recipeModel?.servings ?? 1;
 
-  // Memoize scaled ingredients to prevent unnecessary recalculations
   const scaledIngredients = useMemo(() => {
     if (!recipeModel) return [];
     return recipeModel.getScaledIngredients(currentServings);
   }, [recipeModel, currentServings]);
 
-  // Handle servings increment/decrement
-  const handleServingsChange = useCallback((delta: number) => {
-    setServings((prev) => {
-      const baseServings = prev ?? recipeModel?.servings ?? 1;
-      return Math.max(1, baseServings + delta);
-    });
-  }, [recipeModel]);
+  const handleServingsChange = useCallback(
+    (delta: number) => {
+      setServings(prev => {
+        const base = prev ?? recipeModel?.servings ?? 1;
+        return Math.max(1, base + delta);
+      });
+    },
+    [recipeModel]
+  );
 
-  // Get formatted ingredient text with scaling
   const getScaledIngredientText = useCallback(
     (ingredient: Ingredient): string => {
       if (!recipeModel) return ingredient.name;
@@ -38,7 +43,6 @@ export const useRecipeScaling = (recipeModel: RecipeModel | null) => {
     [recipeModel, currentServings]
   );
 
-  // Reset servings to recipe default
   const resetServings = useCallback(() => {
     setServings(recipeModel?.servings);
   }, [recipeModel]);
@@ -48,6 +52,6 @@ export const useRecipeScaling = (recipeModel: RecipeModel | null) => {
     scaledIngredients,
     handleServingsChange,
     getScaledIngredientText,
-    resetServings,
+    resetServings
   };
 };

@@ -1,5 +1,40 @@
 "use client";
 
+/**
+ * StarRating
+ *
+ * Reusable star-based rating component that supports both interactive and
+ * read-only modes. It renders a fixed five-star scale, allows users to select
+ * a rating via click interactions, and optionally exposes hover state for
+ * previewing a rating before selection.
+ *
+ * Responsibilities:
+ * - Render a consistent five-star rating UI
+ * - Support configurable sizes (small, medium, large)
+ * - Allow controlled rating selection via callbacks
+ * - Provide optional hover feedback for interactive use cases
+ * - Support read-only display for existing ratings
+ *
+ * @component
+ *
+ * @param {Object} props
+ * @param {number} props.value - Current rating value (1–5)
+ * @param {(rating: Rating) => void} [props.onChange] - Callback fired when a rating is selected
+ * @param {boolean} [props.readonly=false] - Disables interaction when true
+ * @param {"sm" | "md" | "lg"} [props.size="md"] - Visual size of the stars
+ * @param {(rating: Rating | null) => void} [props.onHover] - Callback fired on hover enter/leave
+ *
+ * @example
+ * ```tsx
+ * <StarRating
+ *   value={4}
+ *   onChange={(rating) => setRating(rating)}
+ *   onHover={(rating) => setPreview(rating)}
+ *   size="lg"
+ * />
+ * ```
+ */
+
 import { Rating } from "@/types/comment";
 
 interface StarRatingProps {

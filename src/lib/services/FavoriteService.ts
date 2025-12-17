@@ -1,4 +1,3 @@
-// src/lib/services/FavoriteService.ts
 import {
   collection,
   doc,
@@ -11,20 +10,29 @@ import {
   Unsubscribe,
   getDocs,
   query,
-  where,
+  where
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { Recipe } from "@/types/recipe";
 
 /**
- * FavoriteService - Manages user favorites
- * Handles favorite operations and provides helper methods
+ * Favorites persistence service.
+ *
+ * Stores favorites in a per-user document:
+ * - Collection: `favorites`
+ * - Doc id: userId
+ * - Shape: { recipeIds: string[] }
+ *
+ * This favors simple reads/writes and realtime updates. It also means some
+ * operations (e.g. fetching full recipes, counting favorites globally) require
+ * additional reads/queries.
  */
 export class FavoriteService {
   private readonly collectionName = "favorites";
 
   /**
-   * Get user's favorite recipe IDs
+   * Returns a user's favorite recipe ids. If the favorites document does not
+   * exist yet, it is created as an empty set.
    */
   async getFavorites(userId: string): Promise<string[]> {
     try {
@@ -32,19 +40,19 @@ export class FavoriteService {
       const snapshot = await getDoc(docRef);
 
       if (!snapshot.exists()) {
-        // Initialize favorites document if it doesn't exist
         await setDoc(docRef, { recipeIds: [] });
         return [];
       }
 
-      return snapshot.data().recipeIds || [];
+      return (snapshot.data().recipeIds || []) as string[];
     } catch (error) {
-      throw new Error(`Failed to get favorites: ${error}`);
+      throw new Error(`Failed to get favorites: ${String(error)}`);
     }
   }
 
   /**
-   * Listen to real-time favorite updates
+   * Subscribes to realtime changes for a user's favorites document.
+   * Caller must invoke the returned unsubscribe function.
    */
   listenToFavorites(
     userId: string,
@@ -54,21 +62,19 @@ export class FavoriteService {
 
     return onSnapshot(
       docRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          callback(snapshot.data().recipeIds || []);
-        } else {
-          callback([]);
-        }
+      snapshot => {
+        callback(snapshot.exists() ? (snapshot.data().recipeIds || []) : []);
       },
-      (error) => {
+      error => {
+        // Listener errors should not crash UI; log and keep last known state.
         console.error("Error listening to favorites:", error);
       }
     );
   }
 
   /**
-   * Add a recipe to favorites
+   * Adds a recipe id to the user's favorites (idempotent).
+   * Uses arrayUnion to prevent duplicates.
    */
   async addFavorite(userId: string, recipeId: string): Promise<void> {
     try {
@@ -76,35 +82,35 @@ export class FavoriteService {
       const snapshot = await getDoc(docRef);
 
       if (!snapshot.exists()) {
-        // Create new favorites document
         await setDoc(docRef, { recipeIds: [recipeId] });
-      } else {
-        // Update existing favorites
-        await updateDoc(docRef, {
-          recipeIds: arrayUnion(recipeId),
-        });
+        return;
       }
+
+      await updateDoc(docRef, { recipeIds: arrayUnion(recipeId) });
     } catch (error) {
-      throw new Error(`Failed to add favorite: ${error}`);
+      throw new Error(`Failed to add favorite: ${String(error)}`);
     }
   }
 
   /**
-   * Remove a recipe from favorites
+   * Removes a recipe id from the user's favorites (idempotent).
+   *
+   * Note: updateDoc will throw if the favorites document does not exist.
+   * If you want "silent" behavior for non-existent docs, use setDoc(..., {merge:true})
+   * or create the doc in advance via getFavorites().
    */
   async removeFavorite(userId: string, recipeId: string): Promise<void> {
     try {
       const docRef = doc(db, this.collectionName, userId);
-      await updateDoc(docRef, {
-        recipeIds: arrayRemove(recipeId),
-      });
+      await updateDoc(docRef, { recipeIds: arrayRemove(recipeId) });
     } catch (error) {
-      throw new Error(`Failed to remove favorite: ${error}`);
+      throw new Error(`Failed to remove favorite: ${String(error)}`);
     }
   }
 
   /**
-   * Check if a recipe is favorited by user
+   * Returns whether a recipe is currently favorited by the user.
+   * Fails closed to `false` to avoid breaking UI.
    */
   async isFavorite(userId: string, recipeId: string): Promise<boolean> {
     try {
@@ -117,7 +123,10 @@ export class FavoriteService {
   }
 
   /**
-   * Toggle favorite status
+   * Toggles favorite status for a recipe.
+   *
+   * Note: This is not transactional; it does a read then a write. If you need
+   * strict atomicity under concurrent updates, use a transaction.
    */
   async toggleFavorite(userId: string, recipeId: string): Promise<boolean> {
     const isFav = await this.isFavorite(userId, recipeId);
@@ -125,57 +134,45 @@ export class FavoriteService {
     if (isFav) {
       await this.removeFavorite(userId, recipeId);
       return false;
-    } else {
-      await this.addFavorite(userId, recipeId);
-      return true;
     }
+
+    await this.addFavorite(userId, recipeId);
+    return true;
   }
 
   /**
-   * Get full recipe objects for user's favorites
+   * Hydrates the user's favorite ids into full recipe objects.
+   * Missing/deleted recipe docs are filtered out.
    */
   async getFavoriteRecipes(userId: string): Promise<Recipe[]> {
     try {
       const favoriteIds = await this.getFavorites(userId);
+      if (favoriteIds.length === 0) return [];
 
-      if (favoriteIds.length === 0) {
-        return [];
-      }
+      const recipePromises = favoriteIds.map(async id => {
+        const recipeRef = doc(db, "recipes", id);
+        const snapshot = await getDoc(recipeRef);
 
-      // Fetch all favorite recipes
-      const recipePromises = favoriteIds.map(async (id) => {
-        const docRef = doc(db, "recipes", id);
-        const snapshot = await getDoc(docRef);
+        if (!snapshot.exists()) return null;
 
-        if (snapshot.exists()) {
-          return {
-            id: snapshot.id,
-            ...snapshot.data(),
-          } as Recipe;
-        }
-        return null;
+        return { id: snapshot.id, ...snapshot.data() } as Recipe;
       });
 
       const recipes = await Promise.all(recipePromises);
-
-      // Filter out null values (deleted recipes)
-      return recipes.filter((recipe): recipe is Recipe => recipe !== null);
+      return recipes.filter((r): r is Recipe => r !== null);
     } catch (error) {
-      throw new Error(`Failed to get favorite recipes: ${error}`);
+      throw new Error(`Failed to get favorite recipes: ${String(error)}`);
     }
   }
 
   /**
-   * Get favorite count for a recipe
+   * Counts how many users have favorited a specific recipe.
+   * This is a cross-document query on favorites.recipeIds.
    */
   async getFavoriteCount(recipeId: string): Promise<number> {
     try {
       const favoritesRef = collection(db, this.collectionName);
-      const q = query(
-        favoritesRef,
-        where("recipeIds", "array-contains", recipeId)
-      );
-
+      const q = query(favoritesRef, where("recipeIds", "array-contains", recipeId));
       const snapshot = await getDocs(q);
       return snapshot.size;
     } catch (error) {
@@ -185,7 +182,10 @@ export class FavoriteService {
   }
 
   /**
-   * Get user's favorite statistics
+   * Computes simple analytics for a user's favorites.
+   *
+   * Note: "recentlyAdded" is based on recipe.createdAt, not the timestamp when
+   * the user favorited it (that data is not stored in the current model).
    */
   async getFavoriteStats(userId: string): Promise<{
     totalFavorites: number;
@@ -196,14 +196,11 @@ export class FavoriteService {
       const favorites = await this.getFavoriteRecipes(userId);
 
       const favoritesByCategory: Record<string, number> = {};
-
-      favorites.forEach((recipe) => {
+      for (const recipe of favorites) {
         const category = recipe.mealType || "Other";
-        favoritesByCategory[category] =
-          (favoritesByCategory[category] || 0) + 1;
-      });
+        favoritesByCategory[category] = (favoritesByCategory[category] || 0) + 1;
+      }
 
-      // Sort by creation date (most recent first) and take top 5
       const recentlyAdded = favorites
         .sort((a, b) => {
           const aDate = a.createdAt?.toDate?.() || new Date(0);
@@ -211,48 +208,41 @@ export class FavoriteService {
           return bDate.getTime() - aDate.getTime();
         })
         .slice(0, 5)
-        .map((r) => r.id!)
+        .map(r => r.id!)
         .filter(Boolean);
 
       return {
         totalFavorites: favorites.length,
         favoritesByCategory,
-        recentlyAdded,
+        recentlyAdded
       };
     } catch (error) {
-      throw new Error(`Failed to get favorite stats: ${error}`);
+      throw new Error(`Failed to get favorite stats: ${String(error)}`);
     }
   }
 
   /**
-   * Remove deleted recipe from all users' favorites
+   * Removes a deleted recipe id from every user's favorites document.
+   * Intended to be part of a recipe deletion workflow.
    */
   async removeRecipeFromAllFavorites(recipeId: string): Promise<void> {
     try {
       const favoritesRef = collection(db, this.collectionName);
-      const q = query(
-        favoritesRef,
-        where("recipeIds", "array-contains", recipeId)
-      );
-
+      const q = query(favoritesRef, where("recipeIds", "array-contains", recipeId));
       const snapshot = await getDocs(q);
 
-      const updatePromises = snapshot.docs.map((doc) =>
-        updateDoc(doc.ref, {
-          recipeIds: arrayRemove(recipeId),
-        })
+      await Promise.all(
+        snapshot.docs.map(d =>
+          updateDoc(d.ref, { recipeIds: arrayRemove(recipeId) })
+        )
       );
-
-      await Promise.all(updatePromises);
     } catch (error) {
-      throw new Error(
-        `Failed to remove recipe from all favorites: ${error}`
-      );
+      throw new Error(`Failed to remove recipe from all favorites: ${String(error)}`);
     }
   }
 
   /**
-   * Export user's favorites (for backup/export feature)
+   * Exports the user's favorites as a JSON-serializable payload.
    */
   async exportFavorites(userId: string): Promise<{
     userId: string;
@@ -264,47 +254,43 @@ export class FavoriteService {
     return {
       userId,
       exportDate: new Date().toISOString(),
-      favorites,
+      favorites
     };
   }
 
   /**
-   * Clear all favorites for a user
+   * Clears all favorites for a user by resetting recipeIds to an empty array.
    */
   async clearAllFavorites(userId: string): Promise<void> {
     try {
       const docRef = doc(db, this.collectionName, userId);
       await setDoc(docRef, { recipeIds: [] });
     } catch (error) {
-      throw new Error(`Failed to clear favorites: ${error}`);
+      throw new Error(`Failed to clear favorites: ${String(error)}`);
     }
   }
 
   /**
-   * Batch add favorites
+   * Adds multiple recipe ids to favorites, merging with existing ids and
+   * deduplicating on the client before writing.
    */
-  async addMultipleFavorites(
-    userId: string,
-    recipeIds: string[]
-  ): Promise<void> {
+  async addMultipleFavorites(userId: string, recipeIds: string[]): Promise<void> {
     try {
       const docRef = doc(db, this.collectionName, userId);
       const snapshot = await getDoc(docRef);
 
       if (!snapshot.exists()) {
         await setDoc(docRef, { recipeIds });
-      } else {
-        const currentFavorites = snapshot.data().recipeIds || [];
-        const newFavorites = Array.from(
-          new Set([...currentFavorites, ...recipeIds])
-        );
-        await updateDoc(docRef, { recipeIds: newFavorites });
+        return;
       }
+
+      const current = (snapshot.data().recipeIds || []) as string[];
+      const merged = Array.from(new Set([...current, ...recipeIds]));
+      await updateDoc(docRef, { recipeIds: merged });
     } catch (error) {
-      throw new Error(`Failed to add multiple favorites: ${error}`);
+      throw new Error(`Failed to add multiple favorites: ${String(error)}`);
     }
   }
 }
 
-// Export singleton instance
 export const favoriteService = new FavoriteService();

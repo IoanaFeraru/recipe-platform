@@ -1,12 +1,17 @@
 /**
- * Pure utility functions for formatting
- * Following functional programming principles
+ * Pure formatting utilities.
+ *
+ * This module contains deterministic, side-effect-free helpers used to convert
+ * raw data into human-readable strings for UI rendering. All functions are pure
+ * and safe to reuse across components.
  */
 
+/* ======================================================
+ * TIME
+ * ====================================================== */
+
 /**
- * Format minutes into human-readable time
- * @param minutes - Total minutes
- * @returns Formatted string (e.g., "2h 30m", "45m")
+ * Formats a duration in minutes using compact hour/minute notation.
  */
 export const formatTime = (minutes: number): string => {
   if (minutes === 0) return "0m";
@@ -19,10 +24,13 @@ export const formatTime = (minutes: number): string => {
   return `${mins}m`;
 };
 
+/* ======================================================
+ * NUMBERS & FRACTIONS
+ * ====================================================== */
+
 /**
- * Convert decimal number to fraction representation
- * @param num - Decimal number
- * @returns Fraction string (e.g., "1/2", "1 1/3")
+ * Converts a decimal number into a common culinary fraction when possible.
+ * Falls back to a trimmed decimal representation if no match is found.
  */
 export const numberToFraction = (num: number): string => {
   if (num % 1 === 0) return num.toString();
@@ -46,7 +54,7 @@ export const numberToFraction = (num: number): string => {
     { value: 0.125, fraction: "1/8" },
     { value: 0.375, fraction: "3/8" },
     { value: 0.625, fraction: "5/8" },
-    { value: 0.875, fraction: "7/8" },
+    { value: 0.875, fraction: "7/8" }
   ];
 
   for (const { value, fraction } of commonFractions) {
@@ -59,11 +67,7 @@ export const numberToFraction = (num: number): string => {
 };
 
 /**
- * Calculate scaled quantity for different servings
- * @param baseQuantity - Original quantity
- * @param baseServings - Original servings
- * @param targetServings - Target servings
- * @returns Scaled quantity
+ * Scales an ingredient quantity based on servings.
  */
 export const calculateScaledQuantity = (
   baseQuantity: number | undefined,
@@ -74,18 +78,21 @@ export const calculateScaledQuantity = (
     return undefined;
   }
 
-  const safeTargetServings = targetServings > 0 ? targetServings : baseServings;
-  return (baseQuantity / baseServings) * safeTargetServings;
+  const safeTarget = targetServings > 0 ? targetServings : baseServings;
+  return (baseQuantity / baseServings) * safeTarget;
 };
 
+/* ======================================================
+ * DATES
+ * ====================================================== */
+
 /**
- * Format date relative to now
- * @param date - Date to format
- * @returns Relative date string (e.g., "Today", "Yesterday", "3 days ago")
+ * Formats a date as a relative, human-friendly string.
  */
 export const formatRelativeDate = (date: Date | any): string => {
   const d = date?.toDate ? date.toDate() : new Date(date);
   const now = new Date();
+
   const diffMs = now.getTime() - d.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
@@ -99,20 +106,19 @@ export const formatRelativeDate = (date: Date | any): string => {
 };
 
 /**
- * Format absolute date
- * @param date - Date to format
- * @returns Formatted date string
+ * Formats a date as a locale-aware absolute date string.
  */
 export const formatDate = (date: Date | any): string => {
   const d = date?.toDate ? date.toDate() : new Date(date);
   return d.toLocaleDateString();
 };
 
+/* ======================================================
+ * TEXT
+ * ====================================================== */
+
 /**
- * Truncate text to specified length
- * @param text - Text to truncate
- * @param maxLength - Maximum length
- * @returns Truncated text with ellipsis
+ * Truncates text and appends an ellipsis if it exceeds the limit.
  */
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
@@ -120,11 +126,19 @@ export const truncateText = (text: string, maxLength: number): string => {
 };
 
 /**
- * Pluralize word based on count
- * @param count - Number to check
- * @param singular - Singular form
- * @param plural - Plural form (optional, defaults to singular + 's')
- * @returns Pluralized string
+ * Capitalizes the first character of a string.
+ */
+export const capitalize = (str: string): string => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+/* ======================================================
+ * PLURALIZATION & COUNTS
+ * ====================================================== */
+
+/**
+ * Returns the correct singular or plural form for a given count.
  */
 export const pluralize = (
   count: number,
@@ -135,11 +149,7 @@ export const pluralize = (
 };
 
 /**
- * Format count with pluralization
- * @param count - Number to format
- * @param singular - Singular form
- * @param plural - Plural form (optional)
- * @returns Formatted string (e.g., "1 recipe", "5 recipes")
+ * Formats a numeric count with proper pluralization.
  */
 export const formatCount = (
   count: number,
@@ -149,49 +159,41 @@ export const formatCount = (
   return `${count} ${pluralize(count, singular, plural)}`;
 };
 
-/**
- * Capitalize first letter of string
- * @param str - String to capitalize
- * @returns Capitalized string
- */
-export const capitalize = (str: string): string => {
-  if (!str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
+/* ======================================================
+ * LISTS & TAGS
+ * ====================================================== */
 
 /**
- * Format array as comma-separated list
- * @param items - Array of strings
- * @param max - Maximum items to show
- * @returns Formatted string
+ * Formats an array of strings as a comma-separated list,
+ * optionally truncated with a "+X more" suffix.
  */
 export const formatList = (items: string[], max?: number): string => {
   if (items.length === 0) return "";
   if (items.length === 1) return items[0];
 
-  const displayItems = max ? items.slice(0, max) : items;
-  const remaining = items.length - displayItems.length;
+  const visible = max ? items.slice(0, max) : items;
+  const remaining = items.length - visible.length;
 
-  const list = displayItems.join(", ");
+  const list = visible.join(", ");
   return remaining > 0 ? `${list} +${remaining} more` : list;
 };
 
 /**
- * Parse tags from comma-separated string
- * @param tagsString - Comma-separated tags
- * @returns Array of trimmed tags
+ * Parses a comma-separated tag string into a clean array.
  */
 export const parseTags = (tagsString: string): string[] => {
   return tagsString
     .split(",")
-    .map((tag) => tag.trim())
-    .filter((tag) => tag !== "");
+    .map(tag => tag.trim())
+    .filter(Boolean);
 };
 
+/* ======================================================
+ * RATINGS
+ * ====================================================== */
+
 /**
- * Format rating to one decimal place
- * @param rating - Rating number
- * @returns Formatted rating string
+ * Formats a numeric rating to a single decimal place.
  */
 export const formatRating = (rating: number): string => {
   return rating.toFixed(1);

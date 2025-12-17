@@ -1,14 +1,15 @@
-// src/lib/services/StorageService.ts
 import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
-  deleteObject,
-  UploadTask,
+  deleteObject
 } from "firebase/storage";
 import { storage } from "../firebase";
 import { validateImageFile } from "../imageValidation";
 
+/**
+ * Upload progress payload used by UI consumers.
+ */
 export interface UploadProgress {
   progress: number;
   bytesTransferred: number;
@@ -16,22 +17,28 @@ export interface UploadProgress {
 }
 
 /**
- * StorageService - Handles all file upload operations
- * Encapsulates Firebase Storage interactions
+ * Firebase Storage service wrapper.
+ *
+ * Centralizes file validation, upload orchestration, and deletion in one place.
+ * Exposes a small API surface that is easy to consume from UI code while keeping
+ * Firebase-specific details contained.
  */
 export class StorageService {
   /**
-   * Upload a single image with progress tracking
+   * Uploads a single file to the provided storage path.
+   *
+   * - Validates the file before starting the upload.
+   * - Uses resumable uploads and emits progress updates (if requested).
+   * - Resolves with a download URL when the upload completes.
    */
   async uploadImage(
     file: File,
     path: string,
     onProgress?: (progress: UploadProgress) => void
   ): Promise<string> {
-    // Validate file
     const validation = validateImageFile(file);
     if (!validation.isValid) {
-      throw new Error(validation.error);
+      throw new Error(validation.error || "Invalid image file");
     }
 
     return new Promise((resolve, reject) => {
@@ -40,26 +47,22 @@ export class StorageService {
 
       uploadTask.on(
         "state_changed",
-        (snapshot) => {
-          const progress = {
-            progress:
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+        snapshot => {
+          onProgress?.({
+            progress: (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
             bytesTransferred: snapshot.bytesTransferred,
-            totalBytes: snapshot.totalBytes,
-          };
-
-          onProgress?.(progress);
+            totalBytes: snapshot.totalBytes
+          });
         },
-        (error) => {
-          console.error("Upload error:", error);
+        error => {
           reject(new Error(`Upload failed: ${error.message}`));
         },
         async () => {
           try {
             const url = await getDownloadURL(uploadTask.snapshot.ref);
             resolve(url);
-          } catch (error) {
-            reject(error);
+          } catch (err) {
+            reject(err);
           }
         }
       );
@@ -67,7 +70,10 @@ export class StorageService {
   }
 
   /**
-   * Upload multiple images
+   * Uploads multiple images in parallel under a base path.
+   *
+   * Paths are generated with timestamp + index + original filename to reduce
+   * collision risk. The returned URLs preserve the input order.
    */
   async uploadImages(
     files: File[],
@@ -76,7 +82,7 @@ export class StorageService {
   ): Promise<string[]> {
     const uploadPromises = files.map((file, index) => {
       const path = `${basePath}/${Date.now()}_${index}_${file.name}`;
-      return this.uploadImage(file, path, (progress) => {
+      return this.uploadImage(file, path, progress => {
         onProgress?.(index, progress);
       });
     });
@@ -85,7 +91,7 @@ export class StorageService {
   }
 
   /**
-   * Upload recipe main image
+   * Uploads a recipe cover image to `recipes/`.
    */
   async uploadRecipeImage(
     file: File,
@@ -96,7 +102,7 @@ export class StorageService {
   }
 
   /**
-   * Upload recipe step image
+   * Uploads an image associated with a recipe step to `recipes/steps/`.
    */
   async uploadStepImage(
     file: File,
@@ -108,7 +114,10 @@ export class StorageService {
   }
 
   /**
-   * Upload profile photo
+   * Uploads a user profile photo to a stable path.
+   *
+   * Using a stable path makes "update" semantics straightforward (new upload
+   * overwrites the previous object at the same path).
    */
   async uploadProfilePhoto(
     userId: string,
@@ -120,35 +129,32 @@ export class StorageService {
   }
 
   /**
-   * Delete an image from storage
+   * Deletes an object from Storage using a URL or storage path.
+   *
+   * Caller is responsible for removing any Firestore references to the asset.
    */
-  async deleteImage(url: string): Promise<void> {
+  async deleteImage(urlOrPath: string): Promise<void> {
     try {
-      const imageRef = ref(storage, url);
-      await deleteObject(imageRef);
+      await deleteObject(ref(storage, urlOrPath));
     } catch (error) {
-      console.error("Delete error:", error);
-      throw new Error(`Failed to delete image: ${error}`);
+      throw new Error(`Failed to delete image: ${String(error)}`);
     }
   }
 
   /**
-   * Generate unique filename
+   * Generates a collision-resistant filename while preserving the extension.
    */
   generateFilename(originalName: string, prefix: string = ""): string {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 9);
-    const extension = originalName.split(".").pop();
+
+    const extension = originalName.split(".").pop() || "bin";
     return `${prefix}${timestamp}_${random}.${extension}`;
   }
 
-  /**
-   * Get file size in MB
-   */
   getFileSizeMB(file: File): number {
     return file.size / (1024 * 1024);
   }
 }
 
-// Export singleton instance
 export const storageService = new StorageService();

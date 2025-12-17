@@ -1,3 +1,25 @@
+/**
+ * DietaryOptionsSelector component.
+ *
+ * Renders a multi-select control for recipe dietary restrictions. Each option is displayed
+ * as a pill-style button with an icon and label, and selection is controlled externally
+ * via the `selected` array and `onToggle` callback.
+ *
+ * Business rules:
+ * - If "vegan" is selected, "vegetarian" becomes non-interactive (disabled) to prevent
+ *   contradictory user input, since vegan implies vegetarian in the domain model.
+ * - Selection state is derived from `selected` and is not stored locally, ensuring a
+ *   single source of truth in the parent form/hook.
+ *
+ * UX/accessibility notes:
+ * - Uses semantic `<button type="button">` elements for keyboard accessibility.
+ * - Disabled states communicate non-interactive options (reduced opacity/cursor).
+ * - Styling aligns with the application theme via CSS custom properties.
+ *
+ * @param {DietaryOptionsProps} props - Controlled selection state and toggle handler.
+ * @returns A labeled, responsive set of selectable dietary option pills.
+ */
+
 "use client";
 
 import React from "react";
@@ -18,10 +40,6 @@ const DIETARY_OPTIONS = [
   { value: "kosher", label: "Kosher", icon: "✡️" },
 ];
 
-/**
- * DietaryOptionsSelector - Multi-select dietary restrictions
- * Handles vegan/vegetarian dependency logic
- */
 export const DietaryOptionsSelector: React.FC<DietaryOptionsProps> = ({
   selected,
   onToggle,
@@ -37,6 +55,7 @@ export const DietaryOptionsSelector: React.FC<DietaryOptionsProps> = ({
       <label className="block text-sm font-semibold mb-2 text-(--color-text)">
         Dietary Options
       </label>
+
       <div className="flex flex-wrap gap-2">
         {DIETARY_OPTIONS.map((opt) => (
           <button

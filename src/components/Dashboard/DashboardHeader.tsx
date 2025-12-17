@@ -1,5 +1,23 @@
 "use client";
 
+/**
+ * DashboardHeader
+ *
+ * Presentational header component for the user dashboard.
+ * Displays the page title and a primary action button for creating a new recipe.
+ * All behavior is delegated to the parent via callbacks.
+ *
+ * @component
+ *
+ * @param {Object} props
+ * @param {() => void} props.onCreateClick - Callback triggered when the user clicks the "Create Recipe" button
+ *
+ * @example
+ * ```tsx
+ * <DashboardHeader onCreateClick={() => setShowCreateModal(true)} />
+ * ```
+ */
+
 import React from "react";
 import Button from "@/components/UI/Button";
 
@@ -7,10 +25,6 @@ interface DashboardHeaderProps {
   onCreateClick: () => void;
 }
 
-/**
- * DashboardHeader - Dashboard page header with title and create button
- * Pure presentational component
- */
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onCreateClick,
 }) => {

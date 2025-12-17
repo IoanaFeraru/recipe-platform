@@ -1,3 +1,26 @@
+/**
+ * RecipePage
+ *
+ * Container page component responsible for rendering the full recipe detail view.
+ *
+ * Responsibilities:
+ * - Read the dynamic route parameter (`id`) and load the corresponding recipe via `useRecipe`
+ * - Create a `RecipeModel` instance to centralize domain formatting/derived values (time, tags, etc.)
+ * - Fetch creator metadata via `useCreatorInfo`
+ * - Manage favorite state via `useIsFavorite`
+ * - Apply servings scaling and ingredient text formatting via `useRecipeScaling`
+ * - Render appropriate UI for loading, error, and not-found states
+ * - Compose the final page from presentational recipe components and the comments/ratings module
+ *
+ * Architecture:
+ * - Container component pattern: this file orchestrates data and state; UI is delegated to presentational components
+ * - Custom hooks encapsulate business logic and side effects (`useRecipe`, `useRecipeScaling`, `useIsFavorite`, `useCreatorInfo`)
+ * - Domain model (`RecipeModel`) provides normalized accessors and computed fields used by the UI
+ * - Page-level error isolation via `PageErrorBoundary`
+ *
+ * @module RecipePage
+ */
+
 "use client";
 
 import React from "react";
@@ -15,22 +38,12 @@ import {
   RecipeDescription,
   RecipeBadges,
   RecipeIngredients,
-  RecipeInstructions
+  RecipeInstructions,
 } from "@/components/Recipe";
 import { useRecipeScaling } from "@/hooks/useRecipeScaling";
 import { useCreatorInfo } from "@/hooks/useCreatorInfo";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
 
-/**
- * RecipePage - Main recipe display page
- * Refactored into modular components following separation of concerns
- * 
- * Architecture:
- * - Container component pattern (this file)
- * - Presentational components (Recipe/*)
- * - Custom hooks for business logic
- * - Domain model for data operations (RecipeModel)
- */
 export default function RecipePage() {
   const params = useParams();
   const { user } = useAuth();
@@ -39,8 +52,17 @@ export default function RecipePage() {
   const { recipe, loading, error } = useRecipe(recipeId);
   const recipeModel = recipe ? new RecipeModel(recipe) : null;
 
-  const { creator } = useCreatorInfo(recipeModel?.authorId, recipeModel?.authorName);
-  const { isFavorite, toggle: toggleFavorite, loading: favoriteLoading } = useIsFavorite(recipe?.id);
+  const { creator } = useCreatorInfo(
+    recipeModel?.authorId,
+    recipeModel?.authorName
+  );
+
+  const {
+    isFavorite,
+    toggle: toggleFavorite,
+    loading: favoriteLoading,
+  } = useIsFavorite(recipe?.id);
+
   const {
     currentServings,
     scaledIngredients,

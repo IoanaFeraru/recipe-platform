@@ -7,7 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest"
+    "test": "vitest",
+    "test:run": "vitest run --reporter=verbose --pool=forks --poolOptions.forks.singleFork=true",
+    "test:utils": "vitest run src/tests/utils/",
+    "test:hooks": "vitest run src/tests/hooks/",
+    "test:services": "vitest run src/tests/services/",
+    "test:components": "vitest run src/tests/components/",
+    "test:all": "npm run test:utils && npm run test:hooks && npm run test:services && npm run test:components"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
@@ -23,10 +29,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.19.26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "^10.4.22",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",

@@ -1,5 +1,47 @@
 "use client";
 
+/**
+ * ErrorBoundary
+ *
+ * React class-based Error Boundary that prevents rendering crashes by catching
+ * unhandled errors thrown in the component subtree during render, lifecycle
+ * methods, and constructors of child components.
+ *
+ * Capabilities:
+ * - Captures errors with React’s error boundary APIs (getDerivedStateFromError, componentDidCatch)
+ * - Renders either a caller-provided fallback UI or a sensible default fallback
+ * - Exposes an optional onError callback for logging/monitoring integrations
+ * - Supports automatic reset when `resetKeys` change (useful for route changes,
+ *   query param changes, or retrying after state transitions)
+ *
+ * Notes:
+ * - Error boundaries do not catch errors in event handlers, async code, or
+ *   server-side rendering. Handle those cases separately.
+ *
+ * @example
+ * ```tsx
+ * // Basic usage
+ * <ErrorBoundary>
+ *   <MyComponent />
+ * </ErrorBoundary>
+ *
+ * // With custom fallback UI
+ * <ErrorBoundary fallback={<CustomErrorUI />}>
+ *   <MyComponent />
+ * </ErrorBoundary>
+ *
+ * // With error reporting
+ * <ErrorBoundary onError={(error, info) => report(error, info)}>
+ *   <MyComponent />
+ * </ErrorBoundary>
+ *
+ * // Reset on navigation or key change
+ * <ErrorBoundary resetKeys={[route, recipeId]}>
+ *   <RecipeDetails />
+ * </ErrorBoundary>
+ * ```
+ */
+
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
 interface ErrorBoundaryProps {
@@ -15,27 +57,6 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
-/**
- * ErrorBoundary - React error boundary component
- * 
- * Catches JavaScript errors in child components and displays fallback UI
- * 
- * @example
- * // Basic usage
- * <ErrorBoundary>
- *   <MyComponent />
- * </ErrorBoundary>
- * 
- * // With custom fallback
- * <ErrorBoundary fallback={<CustomErrorUI />}>
- *   <MyComponent />
- * </ErrorBoundary>
- * 
- * // With error logging
- * <ErrorBoundary onError={(error) => logToService(error)}>
- *   <MyComponent />
- * </ErrorBoundary>
- */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -52,16 +73,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({ errorInfo });
-    
-    // Log error
+
+    // Non-obvious business rule: always log boundary-caught errors to console
+    // to aid debugging even if an external reporter is configured.
+    // eslint-disable-next-line no-console
     console.error("ErrorBoundary caught an error:", error, errorInfo);
-    
-    // Call optional error handler
+
     this.props.onError?.(error, errorInfo);
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {
-    // Reset error state if resetKeys change
     if (
       this.state.hasError &&
       this.props.resetKeys &&
@@ -87,17 +108,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render(): ReactNode {
     if (this.state.hasError) {
-      // Use custom fallback if provided
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
-
-      // Default fallback UI
-      return (
-        <DefaultErrorFallback
-          error={this.state.error}
-          onReset={this.reset}
-        />
+      return this.props.fallback ?? (
+        <DefaultErrorFallback error={this.state.error} onReset={this.reset} />
       );
     }
 
@@ -106,7 +118,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 }
 
 /**
- * DefaultErrorFallback - Default error UI
+ * DefaultErrorFallback
+ *
+ * Minimal default error UI displayed when no custom fallback is provided.
+ * In development, it exposes the error message in a collapsible details block.
  */
 interface DefaultErrorFallbackProps {
   error: Error | null;
@@ -126,7 +141,7 @@ const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
       <p className="text-(--color-text-muted) mb-4 text-center max-w-md">
         An unexpected error occurred. Please try again.
       </p>
-      
+
       {process.env.NODE_ENV === "development" && error && (
         <details className="mb-4 p-3 bg-(--color-bg) rounded-lg text-sm max-w-md w-full">
           <summary className="cursor-pointer font-semibold text-(--color-text-muted)">
@@ -137,7 +152,7 @@ const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({
           </pre>
         </details>
       )}
-      
+
       <button
         onClick={onReset}
         className="px-6 py-2 rounded-full bg-(--color-primary) text-white font-semibold hover:brightness-110 transition"

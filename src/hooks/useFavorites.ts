@@ -17,8 +17,25 @@ interface UseFavoritesReturn {
 }
 
 /**
- * Custom hook for managing user favorites
- * Provides real-time updates and favorite operations
+ * Favorites hooks for Firestore-backed recipe bookmarking.
+ *
+ * Provides:
+ * - `useFavorites(loadRecipes)`: real-time favorites list for the current user, with optional hydration to full Recipe
+ *   objects for “My Favorites” pages.
+ * - `useFavoriteStats()`: lightweight aggregated insights (count, category breakdown, recently created recipes).
+ * - `useIsFavorite(recipeId)`: single-recipe favorite state helper for detail pages.
+ *
+ * Non-obvious business rules:
+ * - All favorites are user-scoped and reset to empty on logout.
+ * - Real-time synchronization is driven by a Firestore listener from FavoriteService; most UI should rely on the
+ *   listener rather than manual refetches.
+ * - When `loadRecipes` is enabled, the hook hydrates recipe IDs to Recipe documents and silently filters deleted recipes
+ *   (handled inside FavoriteService.getFavoriteRecipes()).
+ *
+ * Design notes:
+ * - `refetch` exists for imperative refreshes (e.g., after navigation), but in real-time mode the listener is the
+ *   primary source of truth.
+ * - Operations throw if the user is not authenticated to keep calling components explicit about auth gating.
  */
 export const useFavorites = (
   loadRecipes: boolean = false
@@ -47,6 +64,8 @@ export const useFavorites = (
       if (loadRecipes && favoriteIds.length > 0) {
         const recipes = await favoriteService.getFavoriteRecipes(user.uid);
         setFavoriteRecipes(recipes);
+      } else if (loadRecipes) {
+        setFavoriteRecipes([]);
       }
     } catch (err) {
       setError(err as Error);
@@ -70,13 +89,19 @@ export const useFavorites = (
         setFavorites(favoriteIds);
         setLoading(false);
 
-        if (loadRecipes && favoriteIds.length > 0) {
-          try {
-            const recipes = await favoriteService.getFavoriteRecipes(user.uid);
-            setFavoriteRecipes(recipes);
-          } catch (err) {
-            console.error("Error loading favorite recipes:", err);
-          }
+        if (!loadRecipes) return;
+
+        // Only hydrate when requested; failures should not break the favorites IDs experience.
+        if (favoriteIds.length === 0) {
+          setFavoriteRecipes([]);
+          return;
+        }
+
+        try {
+          const recipes = await favoriteService.getFavoriteRecipes(user.uid);
+          setFavoriteRecipes(recipes);
+        } catch (err) {
+          console.error("Error loading favorite recipes:", err);
         }
       }
     );
@@ -84,24 +109,14 @@ export const useFavorites = (
     return () => unsubscribe();
   }, [user, loadRecipes]);
 
-  /**
-   * Check if a recipe is favorited
-   */
   const isFavorite = useCallback(
-    (recipeId: string): boolean => {
-      return favorites.includes(recipeId);
-    },
+    (recipeId: string): boolean => favorites.includes(recipeId),
     [favorites]
   );
 
-  /**
-   * Add a recipe to favorites
-   */
   const addFavorite = useCallback(
     async (recipeId: string) => {
-      if (!user) {
-        throw new Error("User must be logged in to add favorites");
-      }
+      if (!user) throw new Error("User must be logged in to add favorites");
 
       try {
         await favoriteService.addFavorite(user.uid, recipeId);
@@ -113,14 +128,9 @@ export const useFavorites = (
     [user]
   );
 
-  /**
-   * Remove a recipe from favorites
-   */
   const removeFavorite = useCallback(
     async (recipeId: string) => {
-      if (!user) {
-        throw new Error("User must be logged in");
-      }
+      if (!user) throw new Error("User must be logged in");
 
       try {
         await favoriteService.removeFavorite(user.uid, recipeId);
@@ -132,21 +142,12 @@ export const useFavorites = (
     [user]
   );
 
-  /**
-   * Toggle favorite status
-   */
   const toggleFavorite = useCallback(
     async (recipeId: string): Promise<boolean> => {
-      if (!user) {
-        throw new Error("User must be logged in");
-      }
+      if (!user) throw new Error("User must be logged in");
 
       try {
-        const newStatus = await favoriteService.toggleFavorite(
-          user.uid,
-          recipeId
-        );
-        return newStatus;
+        return await favoriteService.toggleFavorite(user.uid, recipeId);
       } catch (err) {
         setError(err as Error);
         throw err;
@@ -155,13 +156,8 @@ export const useFavorites = (
     [user]
   );
 
-  /**
-   * Clear all favorites
-   */
   const clearAllFavorites = useCallback(async () => {
-    if (!user) {
-      throw new Error("User must be logged in");
-    }
+    if (!user) throw new Error("User must be logged in");
 
     try {
       await favoriteService.clearAllFavorites(user.uid);
@@ -186,7 +182,12 @@ export const useFavorites = (
 };
 
 /**
- * Hook for favorite statistics
+ * Aggregated favorites statistics hook for the current user.
+ *
+ * Non-obvious business rule:
+ * - “Recently added” is based on the favorited recipes’ `createdAt` (recipe creation time),
+ *   not the time the user favorited them, because favorites are stored as an array of IDs
+ *   without per-entry timestamps.
  */
 export const useFavoriteStats = () => {
   const { user } = useAuth();
@@ -225,8 +226,11 @@ export const useFavoriteStats = () => {
 };
 
 /**
- * Hook to check if a specific recipe is favorited
- * Useful for individual recipe pages
+ * Single-recipe favorite status hook for detail pages.
+ *
+ * Optimized for pages that only need the favorite state of one recipe rather than
+ * maintaining the full favorites array. Uses a one-time check on mount and provides
+ * a toggle helper that updates local state from the service result.
  */
 export const useIsFavorite = (recipeId: string | undefined) => {
   const { user } = useAuth();
@@ -258,10 +262,7 @@ export const useIsFavorite = (recipeId: string | undefined) => {
     if (!user || !recipeId) return;
 
     try {
-      const newStatus = await favoriteService.toggleFavorite(
-        user.uid,
-        recipeId
-      );
+      const newStatus = await favoriteService.toggleFavorite(user.uid, recipeId);
       setIsFavorite(newStatus);
       return newStatus;
     } catch (error) {

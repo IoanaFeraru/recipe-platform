@@ -8,22 +8,17 @@ interface ProfileMessage {
 }
 
 interface UseProfileFormReturn {
-  // Photo state
   photoPreview: string | null;
   newPhoto: File | null;
   photoMessage: ProfileMessage | null;
   isUploadingPhoto: boolean;
   handlePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleUploadPhoto: () => Promise<void>;
-  
-  // Name state
   name: string;
   nameMessage: ProfileMessage | null;
   isSavingName: boolean;
   setName: (value: string) => void;
   handleSaveName: () => Promise<void>;
-  
-  // Password state
   currentPassword: string;
   newPassword: string;
   passwordMessage: ProfileMessage | null;
@@ -32,25 +27,37 @@ interface UseProfileFormReturn {
   setCurrentPassword: (value: string) => void;
   setNewPassword: (value: string) => void;
   handleChangePassword: () => Promise<void>;
-  
-  // Account deletion
   isDeletingAccount: boolean;
   handleDeleteAccount: () => Promise<void>;
-  
-  // User data
   userEmail: string | null;
   userPhotoURL: string | null;
 }
 
 /**
- * useProfileForm - Custom hook for profile page state and logic
- * 
- * Encapsulates:
- * - Photo upload handling
- * - Name update handling
- * - Password change handling
- * - Account deletion
- * - Message management
+ * Profile settings orchestration hook.
+ *
+ * Provides a unified API for profile-management UX, coordinating independent flows:
+ * - Profile photo selection + preview + upload via AuthContext (`updateProfilePhoto`)
+ * - Display name updates via Firebase Auth (`updateProfile`)
+ * - Password changes via AuthContext (`updatePassword`) with basic client validation
+ * - Account deletion via AuthContext (`deleteAccount`)
+ *
+ * The hook intentionally keeps each section’s state separate (photo/name/password/delete)
+ * to allow concurrent UI rendering and distinct loading/error messaging.
+ *
+ * Business rules:
+ * - Photo upload requires both an authenticated `user` and a selected `newPhoto`.
+ * - Display name is trimmed before persistence.
+ * - Password change enforces required fields and a minimum length check (>= 6 chars).
+ * - Success messages are auto-dismissed after 5 seconds; errors are surfaced either as
+ *   section messages (photo/name) or as `passwordError` (password flow).
+ *
+ * UX considerations:
+ * - Uses an object URL for immediate image preview before upload.
+ * - Resets photo/password inputs after successful operations to prevent accidental reuse.
+ * - Exposes `userEmail` and `userPhotoURL` for easy binding in profile screens.
+ *
+ * @returns Profile section state plus action handlers for profile settings UIs.
  */
 export const useProfileForm = (): UseProfileFormReturn => {
   const { user, updateProfilePhoto, updatePassword, deleteAccount } = useAuth();
@@ -77,19 +84,17 @@ export const useProfileForm = (): UseProfileFormReturn => {
   // Account deletion state
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
-  // Sync name with user
   useEffect(() => {
     setName(user?.displayName || "");
   }, [user]);
 
-  // Clear messages after delay
-  const clearMessageAfterDelay = useCallback((
-    setter: React.Dispatch<React.SetStateAction<ProfileMessage | null>>
-  ) => {
-    setTimeout(() => setter(null), 5000);
-  }, []);
+  const clearMessageAfterDelay = useCallback(
+    (setter: React.Dispatch<React.SetStateAction<ProfileMessage | null>>) => {
+      setTimeout(() => setter(null), 5000);
+    },
+    []
+  );
 
-  // Photo handlers
   const handlePhotoChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -101,10 +106,10 @@ export const useProfileForm = (): UseProfileFormReturn => {
 
   const handleUploadPhoto = useCallback(async () => {
     if (!newPhoto || !user) return;
-    
+
     setIsUploadingPhoto(true);
     setPhotoMessage(null);
-    
+
     try {
       await updateProfilePhoto(newPhoto);
       setPhotoMessage({ type: "success", text: "Profile photo updated successfully!" });
@@ -119,13 +124,12 @@ export const useProfileForm = (): UseProfileFormReturn => {
     }
   }, [newPhoto, user, updateProfilePhoto, clearMessageAfterDelay]);
 
-  // Name handlers
   const handleSaveName = useCallback(async () => {
     if (!user) return;
-    
+
     setIsSavingName(true);
     setNameMessage(null);
-    
+
     try {
       await updateProfile(user, { displayName: name.trim() });
       setNameMessage({ type: "success", text: "Name updated successfully!" });
@@ -138,7 +142,6 @@ export const useProfileForm = (): UseProfileFormReturn => {
     }
   }, [user, name, clearMessageAfterDelay]);
 
-  // Password handlers
   const handleChangePassword = useCallback(async () => {
     if (!currentPassword || !newPassword || !user) {
       setPasswordError("Please fill in all fields.");
@@ -153,7 +156,7 @@ export const useProfileForm = (): UseProfileFormReturn => {
     setIsChangingPassword(true);
     setPasswordError("");
     setPasswordMessage(null);
-    
+
     try {
       await updatePassword(currentPassword, newPassword);
       setPasswordMessage({ type: "success", text: "Password updated successfully!" });
@@ -168,10 +171,9 @@ export const useProfileForm = (): UseProfileFormReturn => {
     }
   }, [currentPassword, newPassword, user, updatePassword, clearMessageAfterDelay]);
 
-  // Account deletion
   const handleDeleteAccount = useCallback(async () => {
     setIsDeletingAccount(true);
-    
+
     try {
       await deleteAccount();
     } catch (err: any) {
@@ -183,22 +185,19 @@ export const useProfileForm = (): UseProfileFormReturn => {
   }, [deleteAccount]);
 
   return {
-    // Photo
     photoPreview,
     newPhoto,
     photoMessage,
     isUploadingPhoto,
     handlePhotoChange,
     handleUploadPhoto,
-    
-    // Name
+
     name,
     nameMessage,
     isSavingName,
     setName,
     handleSaveName,
-    
-    // Password
+
     currentPassword,
     newPassword,
     passwordMessage,
@@ -207,12 +206,10 @@ export const useProfileForm = (): UseProfileFormReturn => {
     setCurrentPassword,
     setNewPassword,
     handleChangePassword,
-    
-    // Account
+
     isDeletingAccount,
     handleDeleteAccount,
-    
-    // User data
+
     userEmail: user?.email || null,
     userPhotoURL: user?.photoURL || defaultProfilePic,
   };

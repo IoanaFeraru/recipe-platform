@@ -1,15 +1,34 @@
 "use client";
 
+/**
+ * NavbarLogo component.
+ *
+ * Renders the application brand identity within the navigation bar.
+ * Provides a clickable logo and brand name that navigates the user
+ * back to the home page. This component is purely presentational and
+ * contains no business logic.
+ *
+ * Responsibilities:
+ * - Display the application logo image
+ * - Display the application brand name
+ * - Provide a consistent navigation entry point to the home route
+ *
+ * Design notes:
+ * - Uses Next.js Link for client-side navigation
+ * - Styling aligns with the global typography and color system
+ * - Hover state reinforces brand interactivity
+ *
+ * @module NavbarLogo
+ */
+
 import React from "react";
 import Link from "next/link";
 
 interface NavbarLogoProps {
+  /** Source URL for the brand logo image */
   logoSrc: string;
 }
 
-/**
- * NavbarLogo - Brand logo and title component
- */
 export const NavbarLogo: React.FC<NavbarLogoProps> = ({ logoSrc }) => {
   return (
     <Link

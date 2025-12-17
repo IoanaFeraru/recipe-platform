@@ -28,11 +28,25 @@ interface UseRecipeActionsReturn {
 }
 
 /**
- * useRecipeActions - Encapsulates all recipe CRUD operations and modal state
- * Centralizes recipe management logic with error handling
- * 
- * @param props - User ID and CRUD functions from useUserRecipes
- * @returns Modal states and action handlers
+ * Recipe CRUD UI orchestration hook.
+ *
+ * Coordinates recipe create/update/delete flows with UI state that typically accompanies them:
+ * - create/edit modal lifecycle (open/close, edit target selection)
+ * - delete confirmation lifecycle (open/close, selected recipe metadata)
+ * - submission state (single shared `isSubmitting` flag for all operations)
+ * - user-facing error state, cleared at the start of each new action
+ *
+ * The hook is intentionally decoupled from persistence by receiving CRUD functions via props
+ * (commonly provided by `useUserRecipes`). This keeps the hook focused on orchestration and
+ * component-friendly ergonomics rather than Firestore specifics.
+ *
+ * Non-obvious business rules:
+ * - Create requires an authenticated `userId`; when creating, `authorId` is set to `userId`.
+ * - On successful create/update, the modal closes automatically.
+ * - On successful delete, the confirmation dialog closes automatically.
+ *
+ * @param props - Current user id and the CRUD implementations to invoke.
+ * @returns Modal/confirmation state plus action handlers for UI components.
  */
 export const useRecipeActions = ({
   userId,
@@ -40,11 +54,9 @@ export const useRecipeActions = ({
   updateRecipe,
   deleteRecipe,
 }: UseRecipeActionsProps): UseRecipeActionsReturn => {
-  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
-  
-  // Delete confirmation state
+
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     recipeId: string | null;
@@ -55,55 +67,36 @@ export const useRecipeActions = ({
     recipeName: "",
   });
 
-  // Operation state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Open modal for creating new recipe
-   */
   const openCreateModal = useCallback(() => {
     setEditingRecipe(null);
     setIsModalOpen(true);
     setError(null);
   }, []);
 
-  /**
-   * Open modal for editing existing recipe
-   */
   const openEditModal = useCallback((recipe: Recipe) => {
     setEditingRecipe(recipe);
     setIsModalOpen(true);
     setError(null);
   }, []);
 
-  /**
-   * Close recipe modal
-   */
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setEditingRecipe(null);
     setError(null);
   }, []);
 
-  /**
-   * Open delete confirmation dialog
-   */
-  const openDeleteConfirmation = useCallback(
-    (recipeId: string, recipeName: string) => {
-      setDeleteConfirmation({
-        isOpen: true,
-        recipeId,
-        recipeName,
-      });
-      setError(null);
-    },
-    []
-  );
+  const openDeleteConfirmation = useCallback((recipeId: string, recipeName: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      recipeId,
+      recipeName,
+    });
+    setError(null);
+  }, []);
 
-  /**
-   * Close delete confirmation dialog
-   */
   const closeDeleteConfirmation = useCallback(() => {
     setDeleteConfirmation({
       isOpen: false,
@@ -113,14 +106,12 @@ export const useRecipeActions = ({
     setError(null);
   }, []);
 
-  /**
-   * Handle create or update recipe
-   */
   const handleCreateOrUpdate = useCallback(
     async (data: any) => {
       if (!userId) {
-        setError("User must be logged in");
-        throw new Error("User must be logged in");
+        const msg = "User must be logged in";
+        setError(msg);
+        throw new Error(msg);
       }
 
       setIsSubmitting(true);
@@ -136,12 +127,13 @@ export const useRecipeActions = ({
             createdAt: new Date(),
           });
         }
+
         closeModal();
       } catch (err) {
-        const errorMessage = "Failed to save recipe. Please try again.";
-        setError(errorMessage);
+        const msg = "Failed to save recipe. Please try again.";
+        setError(msg);
         console.error("Failed to save recipe:", err);
-        throw new Error(errorMessage);
+        throw new Error(msg);
       } finally {
         setIsSubmitting(false);
       }
@@ -149,9 +141,6 @@ export const useRecipeActions = ({
     [userId, editingRecipe, createRecipe, updateRecipe, closeModal]
   );
 
-  /**
-   * Handle delete recipe
-   */
   const handleDelete = useCallback(async () => {
     if (!deleteConfirmation.recipeId) {
       setError("No recipe selected for deletion");
@@ -165,10 +154,10 @@ export const useRecipeActions = ({
       await deleteRecipe(deleteConfirmation.recipeId);
       closeDeleteConfirmation();
     } catch (err) {
-      const errorMessage = "Failed to delete recipe. Please try again.";
-      setError(errorMessage);
+      const msg = "Failed to delete recipe. Please try again.";
+      setError(msg);
       console.error("Failed to delete recipe:", err);
-      throw new Error(errorMessage);
+      throw new Error(msg);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,5 +1,37 @@
 "use client";
 
+/**
+ * PasswordField
+ *
+ * Reusable password input component that standardizes password entry UX across the
+ * application. Provides a show/hide toggle, optional Caps Lock detection, and
+ * accessible validation messaging.
+ *
+ * Responsibilities:
+ * - Render a labeled password input with consistent styling
+ * - Toggle visibility between masked and plain text values
+ * - Detect Caps Lock state during typing and optionally notify consumers
+ * - Display validation errors with proper ARIA semantics
+ *
+ * Accessibility:
+ * - Associates label and input via `htmlFor` / `id`
+ * - Uses `aria-invalid` to expose validation state
+ * - Links error text via `aria-describedby`
+ * - Toggle button includes an `aria-label` describing the action
+ *
+ * @component
+ *
+ * @example
+ * ```tsx
+ * <PasswordField
+ *   label="Password"
+ *   name="password"
+ *   value={password}
+ *   onChange={setPassword}
+ *   showCapsLockWarning
+ * />
+ * ```
+ */
 import React, { useState, useCallback } from "react";
 
 interface PasswordFieldProps {
@@ -16,18 +48,6 @@ interface PasswordFieldProps {
   onCapsLockChange?: (isOn: boolean) => void;
 }
 
-/**
- * PasswordField - Password input with show/hide toggle and caps lock warning
- * 
- * @example
- * <PasswordField
- *   label="Password"
- *   name="password"
- *   value={password}
- *   onChange={setPassword}
- *   showCapsLockWarning
- * />
- */
 export const PasswordField: React.FC<PasswordFieldProps> = ({
   label,
   name,
@@ -44,11 +64,14 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
 
-  const handleKeyUp = useCallback((e: React.KeyboardEvent) => {
-    const isCapsLock = e.getModifierState("CapsLock");
-    setCapsLock(isCapsLock);
-    onCapsLockChange?.(isCapsLock);
-  }, [onCapsLockChange]);
+  const handleKeyUp = useCallback(
+    (e: React.KeyboardEvent) => {
+      const isCapsLock = e.getModifierState("CapsLock");
+      setCapsLock(isCapsLock);
+      onCapsLockChange?.(isCapsLock);
+    },
+    [onCapsLockChange]
+  );
 
   const toggleVisibility = useCallback(() => {
     setShowPassword((prev) => !prev);
@@ -56,14 +79,11 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
 
   return (
     <div className="flex flex-col gap-1">
-      <label 
-        htmlFor={name}
-        className="text-sm font-medium text-(--color-text)"
-      >
+      <label htmlFor={name} className="text-sm font-medium text-(--color-text)">
         {label}
         {required && <span className="text-(--color-danger) ml-1">*</span>}
       </label>
-      
+
       <div className="relative">
         <input
           id={name}
@@ -77,9 +97,9 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           autoComplete={autoComplete}
           required={required}
           className={`
-            w-full pr-14 px-3 py-2 rounded-md 
-            border border-(--color-border) 
-            bg-(--color-bg) 
+            w-full pr-14 px-3 py-2 rounded-md
+            border border-(--color-border)
+            bg-(--color-bg)
             text-(--color-text)
             focus:outline-none focus:ring-2 focus:ring-(--color-primary)
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -89,7 +109,7 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
         />
-        
+
         <button
           type="button"
           onClick={toggleVisibility}
@@ -105,9 +125,9 @@ export const PasswordField: React.FC<PasswordFieldProps> = ({
           </p>
         )}
       </div>
-      
+
       {error && (
-        <p 
+        <p
           id={`${name}-error`}
           className="text-sm text-(--color-danger) mt-1"
           role="alert"

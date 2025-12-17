@@ -1,5 +1,27 @@
 "use client";
 
+/**
+ * PageErrorBoundary
+ *
+ * Page-level error boundary wrapper that catches runtime errors occurring
+ * within an entire page subtree and renders a full-screen fallback UI.
+ * Intended for use at route or page boundaries to prevent the application
+ * from crashing and to provide clear recovery actions to the user.
+ *
+ * Responsibilities:
+ * - Catch unhandled rendering/runtime errors via a shared ErrorBoundary
+ * - Optionally report errors to a higher-level handler (logging/monitoring)
+ * - Display a user-friendly, full-page fallback with recovery actions
+ *
+ * Usage:
+ * - Wrap complete pages or major route segments
+ * - Not intended for small component-level isolation (use ComponentErrorBoundary instead)
+ *
+ * Recovery options provided:
+ * - Refresh the current page
+ * - Navigate back to the application home page
+ */
+
 import React, { ReactNode } from "react";
 import { ErrorBoundary } from "./ErrorBoundary";
 import Button from "@/components/UI/Button";
@@ -9,23 +31,13 @@ interface PageErrorBoundaryProps {
   onError?: (error: Error) => void;
 }
 
-/**
- * PageErrorBoundary - Error boundary for page-level errors
- * Displays a full-page error UI with navigation options
- * 
- * @example
- * // Wrap individual pages
- * <PageErrorBoundary>
- *   <RecipePage />
- * </PageErrorBoundary>
- */
 export const PageErrorBoundary: React.FC<PageErrorBoundaryProps> = ({
   children,
   onError,
 }) => {
   return (
     <ErrorBoundary
-      onError={(error, info) => onError?.(error)}
+      onError={(error) => onError?.(error)}
       fallback={<PageErrorFallback />}
     >
       {children}
@@ -34,7 +46,11 @@ export const PageErrorBoundary: React.FC<PageErrorBoundaryProps> = ({
 };
 
 /**
- * PageErrorFallback - Full page error display
+ * PageErrorFallback
+ *
+ * Full-screen fallback UI displayed when a page-level error is caught.
+ * Provides clear messaging and basic recovery actions without relying
+ * on client-side routing state.
  */
 const PageErrorFallback: React.FC = () => {
   const handleGoHome = () => {
@@ -49,28 +65,28 @@ const PageErrorFallback: React.FC = () => {
     <div className="min-h-screen bg-(--color-bg) flex items-center justify-center p-8">
       <div className="text-center max-w-md">
         <div className="text-8xl mb-6">😵</div>
-        
+
         <h1 className="text-3xl font-bold text-(--color-text) mb-4 garet-heavy">
           Oops! Something went wrong
         </h1>
-        
+
         <p className="text-(--color-text-muted) mb-8 text-lg">
-          We encountered an unexpected error. Don't worry, it's not your fault!
+          We encountered an unexpected error. Don’t worry — it’s not your fault.
         </p>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button variant="primary" onClick={handleRefresh}>
-            🔄 Refresh Page
+            Refresh Page
           </Button>
-          
+
           <button
             onClick={handleGoHome}
             className="px-6 py-3 rounded-full border-2 border-(--color-border) text-(--color-text) font-semibold hover:bg-(--color-bg-secondary) transition"
           >
-            🏠 Go Home
+            Go Home
           </button>
         </div>
-        
+
         <p className="mt-8 text-sm text-(--color-text-muted)">
           If this problem persists, please contact support.
         </p>

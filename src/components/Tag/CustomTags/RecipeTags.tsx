@@ -1,3 +1,16 @@
+"use client";
+
+/**
+ * RecipeTags component.
+ *
+ * Renders a compact, read-only preview of a recipe’s tags using the Tag component.
+ * By default, it displays up to three tags and, if more are available, shows a
+ * numeric indicator for the remaining count.
+ *
+ * This component is typically used in recipe cards or list views where space is
+ * limited and full tag lists are not required.
+ */
+
 import Tag from "@/components/Tag/Tag";
 
 interface Props {

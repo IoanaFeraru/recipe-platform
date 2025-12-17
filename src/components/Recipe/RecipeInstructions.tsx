@@ -1,3 +1,33 @@
+/**
+ * RecipeInstructions component.
+ *
+ * Renders the step-by-step cooking instructions for a recipe, including
+ * optional illustrative images per step. This module is strictly
+ * presentational: it assumes steps are already validated, ordered,
+ * and prepared by the parent layer.
+ *
+ * Responsibilities:
+ * - Display an ordered list of recipe instructions
+ * - Visually number each step for clarity and ease of following
+ * - Render optional step images when available
+ *
+ * Design considerations:
+ * - Uses a card-style container aligned with the application design system
+ * - Step numbers are emphasized to support cooking workflows
+ * - Images are displayed inline with their corresponding step for context
+ *
+ * Performance considerations:
+ * - Individual instruction steps are memoized to avoid unnecessary re-renders
+ *   when parent components update unrelated state
+ *
+ * Accessibility notes:
+ * - Uses semantic ordered lists (`ol` / `li`) for logical reading order
+ * - Text content is rendered as plain text for screen reader compatibility
+ * - Images include descriptive alt text referencing the step number
+ *
+ * @module RecipeInstructions
+ */
+
 "use client";
 
 import React from "react";
@@ -12,9 +42,6 @@ interface RecipeInstructionsProps {
   steps: Step[];
 }
 
-/**
- * RecipeInstructions - Displays step-by-step cooking instructions
- */
 export const RecipeInstructions: React.FC<RecipeInstructionsProps> = ({
   steps,
 }) => {
@@ -36,28 +63,22 @@ export const RecipeInstructions: React.FC<RecipeInstructionsProps> = ({
   );
 };
 
-/**
- * InstructionStep - Individual instruction step with optional image
- */
 const InstructionStep: React.FC<{
   step: Step;
   stepNumber: number;
 }> = React.memo(({ step, stepNumber }) => (
   <li className="flex gap-4">
-    {/* Step Number */}
     <div className="shrink-0">
       <div className="w-10 h-10 rounded-full bg-(--color-primary) text-white font-bold text-lg flex items-center justify-center">
         {stepNumber}
       </div>
     </div>
 
-    {/* Step Content */}
     <div className="flex-1">
       <p className="text-(--color-text) leading-relaxed mb-3 text-lg">
         {step.text}
       </p>
 
-      {/* Step Image */}
       {step.imageUrl && (
         <div className="relative w-full h-80 rounded-lg overflow-hidden border-2 border-(--color-border)">
           <Image

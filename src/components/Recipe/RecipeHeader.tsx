@@ -1,3 +1,36 @@
+/**
+ * RecipeHeader component.
+ *
+ * Renders the primary header section of a recipe detail page, including the
+ * recipe title, creator attribution, and favorite (save) interaction.
+ * This component is presentation-focused, with minimal user interaction logic
+ * delegated via callback props.
+ *
+ * Responsibilities:
+ * - Display the recipe title prominently as the main page heading
+ * - Show creator information (name and optional avatar) when available
+ * - Provide a favorite button with visual state (saved / not saved)
+ * - Guard favorite actions when the user is not authenticated
+ *
+ * User interaction behavior:
+ * - If the user is not logged in, attempting to favorite triggers a prompt
+ * - Favorite button is disabled while favorite state is updating
+ * - Visual styling clearly distinguishes saved vs unsaved states
+ *
+ * Design considerations:
+ * - Large, bold title establishes clear visual hierarchy
+ * - Creator avatar uses a circular cropped image with a fallback
+ * - Button styling aligns with the application’s design system
+ *
+ * Accessibility notes:
+ * - Uses semantic heading (`h1`) for screen reader context
+ * - Favorite button includes an aria-label reflecting current state
+ * - Disabled state prevents repeated actions during async updates
+ *
+ * @param {RecipeHeaderProps} props - Recipe title, creator info, and favorite state handlers.
+ * @returns The recipe header section with title, author attribution, and favorite control.
+ */
+
 "use client";
 
 import React from "react";
@@ -16,9 +49,6 @@ interface RecipeHeaderProps {
   isUserLoggedIn: boolean;
 }
 
-/**
- * RecipeHeader - Displays recipe title, creator info, and favorite button
- */
 export const RecipeHeader: React.FC<RecipeHeaderProps> = ({
   title,
   creator,
