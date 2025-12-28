@@ -48,7 +48,7 @@ interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  resetKeys?: any[];
+  resetKeys?: unknown[];
 }
 
 interface ErrorBoundaryState {
@@ -93,7 +93,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
-  private arraysEqual(a: any[], b: any[]): boolean {
+  private arraysEqual(a: unknown[], b: unknown[]): boolean {
     if (a.length !== b.length) return false;
     return a.every((val, i) => val === b[i]);
   }

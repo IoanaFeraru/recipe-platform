@@ -7,12 +7,17 @@ import { ThemeProvider } from '@/context/ThemeContext';
 interface MockAuthProviderProps {
   children: ReactNode;
   value?: {
-    user: any;
+    user: {
+      uid: string;
+      email: string | null;
+      displayName: string | null;
+      photoURL?: string | null;
+    } | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string, displayName: string) => Promise<void>;
     logout: () => Promise<void>;
-    updateUserProfile: (data: any) => Promise<void>;
+    updateUserProfile: (data: { displayName?: string; photoURL?: string }) => Promise<void>;
   };
 }
 
@@ -33,7 +38,7 @@ export function MockAuthProvider({ children, value }: MockAuthProviderProps) {
 // All Providers wrapper
 interface AllProvidersProps {
   children: ReactNode;
-  authValue?: any;
+  authValue?: MockAuthProviderProps['value'];
 }
 
 function AllProviders({ children, authValue }: AllProvidersProps) {
@@ -46,7 +51,7 @@ function AllProviders({ children, authValue }: AllProvidersProps) {
 
 // Custom render function
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  authValue?: any;
+  authValue?: MockAuthProviderProps['value'];
 }
 
 export function renderWithProviders(

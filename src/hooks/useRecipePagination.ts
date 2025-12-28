@@ -3,7 +3,7 @@ import { QueryDocumentSnapshot } from "firebase/firestore";
 import { Recipe } from "@/types/recipe";
 import { fetchRecipesPage } from "@/lib/listenRecipesPaginated";
 
-type SortOption = "az" | "za" | "dateDesc" | "dateAsc";
+type SortOption = "az" | "za" | "dateDesc" | "dateAsc" | "ratingDesc" | "popularityDesc";
 
 interface UseRecipePaginationReturn {
   recipes: Recipe[];

@@ -40,7 +40,7 @@ interface IngredientsSectionProps {
   ingredients: Ingredient[];
   onAdd: () => void;
   onRemove: (index: number) => void;
-  onUpdate: (index: number, field: keyof Ingredient, value: any) => void;
+  onUpdate: (index: number, field: keyof Ingredient, value: string | number | undefined) => void;
   errors?: {
     ingredients?: string;
   };

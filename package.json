@@ -9,11 +9,12 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run --reporter=verbose --pool=forks --poolOptions.forks.singleFork=true",
-    "test:utils": "vitest run src/tests/utils/",
-    "test:hooks": "vitest run src/tests/hooks/",
-    "test:services": "vitest run src/tests/services/",
-    "test:components": "vitest run src/tests/components/",
-    "test:all": "npm run test:utils && npm run test:hooks && npm run test:services && npm run test:components"
+    "test:utils": "node --max-old-space-size=2048 ./node_modules/vitest/vitest.mjs run src/tests/utils/ --reporter=verbose --pool=forks --poolOptions.forks.singleFork=true --poolOptions.forks.isolate=false",
+    "test:hooks": "node --max-old-space-size=2048 ./node_modules/vitest/vitest.mjs run src/tests/hooks/ --reporter=verbose --pool=forks --poolOptions.forks.singleFork=true --poolOptions.forks.isolate=false",
+    "test:services": "node --max-old-space-size=1536 ./node_modules/vitest/vitest.mjs run src/tests/services/RecipeService.test.ts --reporter=verbose --pool=forks --poolOptions.forks.singleFork=true --poolOptions.forks.isolate=false",
+    "test:components": "node --max-old-space-size=2048 ./node_modules/vitest/vitest.mjs run src/tests/components/ --reporter=verbose --pool=forks --poolOptions.forks.singleFork=true --poolOptions.forks.isolate=false",
+    "test:all": "npm run test:utils && npm run test:hooks && npm run test:services && npm run test:components",
+    "test:all:save": "npm run test:utils -- --reporter=tap > test-results.txt 2>&1 && npm run test:hooks -- --reporter=tap >> test-results.txt 2>&1 && npm run test:services -- --reporter=tap >> test-results.txt 2>&1 && npm run test:components -- --reporter=tap >> test-results.txt 2>&1"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

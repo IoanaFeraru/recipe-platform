@@ -50,6 +50,7 @@ import { TimeInputSection } from "./TimeInputSection";
 import { ImageUploadSection } from "./ImageUploadSection";
 import { IngredientsSection } from "./IngredientsSection";
 import { StepsSection } from "./StepsSection";
+import { MeasurementUnit } from "@/types/recipe";
 
 interface Ingredient {
   name: string;
@@ -62,13 +63,39 @@ interface Step {
   text: string;
   imageUrl?: string;
   imageFile?: File;
+  [key: string]: unknown;
+}
+
+interface RecipeData {
+  title: string;
+  description?: string;
+  servings: number;
+  ingredients: Array<{
+    name: string;
+    quantity?: number;
+    unit?: MeasurementUnit;
+    notes?: string;
+  }>;
+  steps: Array<{
+    text: string;
+    imageUrl?: string;
+  }>;
+  tags: string[];
+  dietary: import("@/types/recipe").DietaryOption[];
+  difficulty?: "easy" | "medium" | "hard";
+  mealType?: string;
+  minActivePrepTime: number;
+  maxActivePrepTime: number;
+  minPassiveTime?: number;
+  maxPassiveTime?: number;
+  imageUrl?: string;
 }
 
 interface RecipeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
-  editRecipe?: any;
+  onSubmit: (data: RecipeData) => Promise<void>;
+  editRecipe?: RecipeData & { id?: string };
 }
 
 export default function RecipeModal({
@@ -135,11 +162,11 @@ export default function RecipeModal({
       setDietary(editRecipe.dietary || []);
 
       const normalizedIngredients = (editRecipe.ingredients || []).map(
-        (ing: any) => ({
-          name: typeof ing.name === "string" ? ing.name : ing.name?.name || "",
-          quantity: ing.name?.quantity || ing.quantity || "",
-          unit: ing.name?.unit || ing.unit || "",
-          notes: ing.name?.notes || ing.notes || "",
+        (ing) => ({
+          name: ing.name || "",
+          quantity: ing.quantity || "",
+          unit: ing.unit || "",
+          notes: ing.notes || "",
         })
       );
       setIngredients(
@@ -148,7 +175,7 @@ export default function RecipeModal({
           : [{ name: "", quantity: "", unit: "", notes: "" }]
       );
       setSteps(
-        editRecipe.steps.map((s: any) => ({
+        editRecipe.steps.map((s) => ({
           text: s.text,
           imageUrl: s.imageUrl,
           imageFile: undefined,

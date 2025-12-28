@@ -92,7 +92,7 @@ export const useLoginForm = (): UseLoginFormReturn => {
       try {
         await login(email, password);
         router.push("/dashboard");
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Security/UX: do not leak which field failed; show generic message.
         setError("Invalid credentials");
         triggerShake();

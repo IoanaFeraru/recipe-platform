@@ -34,10 +34,10 @@ const PAGE_SIZE = 6;
 export const fetchRecipesPage = async (
   cursor: QueryDocumentSnapshot | null,
   selectedTag?: string,
-  sortBy: "dateDesc" | "dateAsc" | "az" | "za" = "dateDesc"
+  sortBy: "dateDesc" | "dateAsc" | "az" | "za" | "ratingDesc" | "popularityDesc" = "dateDesc"
 ) => {
   const collectionRef = collection(db, "recipes");
-  const constraints: any[] = [];
+  const constraints: Parameters<typeof query>[1][] = [];
 
   if (selectedTag) {
     constraints.push(where("tags", "array-contains", selectedTag));
@@ -65,8 +65,8 @@ export const fetchRecipesPage = async (
      * Handles legacy records where `name` may be nested or malformed.
      */
     const ingredients: Ingredient[] = (data.ingredients || []).map(
-      (ing: any) => ({
-        name: typeof ing.name === "string" ? ing.name : ing.name?.name ?? "",
+      (ing: Ingredient) => ({
+        name: ing.name ?? "",
         quantity: ing.quantity,
         unit: ing.unit,
         notes: ing.notes

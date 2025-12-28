@@ -3,8 +3,8 @@ import { recipeSchema } from "@/lib/recipeSchema";
 
 interface RecipeData {
   title: string;
-  ingredients: Array<{ name: string; [key: string]: any }>;
-  steps: Array<{ text: string; [key: string]: any }>;
+  ingredients: Array<{ name: string; [key: string]: unknown }>;
+  steps: Array<{ text: string; [key: string]: unknown }>;
   minActivePrepTime: number;
   maxActivePrepTime: number;
 }

@@ -12,8 +12,12 @@ export default defineConfig({
     poolOptions: {
       forks: {
         singleFork: true,
+        isolate: false,
       },
     },
+    maxWorkers: 1,
+    minWorkers: 1,
+    maxConcurrency: 1,
     testTimeout: 10000,
     coverage: {
       provider: 'v8',

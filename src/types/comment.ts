@@ -60,8 +60,9 @@ export interface Comment {
 
   /**
    * Creation timestamp as stored by the persistence layer.
+   * Can be a Firestore Timestamp or a Date object.
    */
-  createdAt: any;
+  createdAt: Date | { toDate(): Date; toMillis(): number };
 
   /**
    * Indicates whether the comment was posted by the recipe owner.

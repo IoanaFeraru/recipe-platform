@@ -133,8 +133,8 @@ export const useRecipe = (id: string | undefined) => {
           return;
         }
 
-        const ingredients: Ingredient[] = (data.ingredients ?? []).map((ing: any) => ({
-          name: typeof ing.name === "string" ? ing.name : ing.name?.name ?? "",
+        const ingredients: Ingredient[] = (data.ingredients ?? []).map((ing) => ({
+          name: ing.name ?? "",
           quantity: ing.quantity,
           unit: ing.unit,
           notes: ing.notes

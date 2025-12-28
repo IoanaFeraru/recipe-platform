@@ -182,18 +182,18 @@ export const validateTextLength = (
  * NUMBER VALIDATION
  * ====================================================== */
 
-export const isPositiveNumber = (value: any): boolean => {
+export const isPositiveNumber = (value: unknown): boolean => {
   const num = Number(value);
   return !isNaN(num) && num > 0;
 };
 
-export const isNonNegativeNumber = (value: any): boolean => {
+export const isNonNegativeNumber = (value: unknown): boolean => {
   const num = Number(value);
   return !isNaN(num) && num >= 0;
 };
 
 export const validatePositiveNumber = (
-  value: any,
+  value: unknown,
   fieldName: string = "Value"
 ): ValidationResult => {
   if (value === undefined || value === null || value === "") {
@@ -211,7 +211,7 @@ export const validatePositiveNumber = (
 };
 
 export const validateNumberRange = (
-  value: any,
+  value: unknown,
   min: number,
   max: number,
   fieldName: string = "Value"
@@ -236,7 +236,7 @@ export const validateNumberRange = (
  * RECIPE-SPECIFIC VALIDATION
  * ====================================================== */
 
-export const validateServings = (servings: any): ValidationResult => {
+export const validateServings = (servings: unknown): ValidationResult => {
   const num = Number(servings);
 
   if (isNaN(num)) {
@@ -282,7 +282,7 @@ export const validateRecipeDescription = (
   return { isValid: true };
 };
 
-export const validateRating = (rating: any): ValidationResult => {
+export const validateRating = (rating: unknown): ValidationResult => {
   return validateNumberRange(rating, 1, 5, "Rating");
 };
 
@@ -362,7 +362,7 @@ export const validateTags = (tags: string[]): ValidationResult => {
  * ====================================================== */
 
 export const validateNonEmptyArray = (
-  array: any[],
+  array: unknown[],
   fieldName: string = "Items"
 ): ValidationResult => {
   if (!Array.isArray(array) || array.length === 0) {

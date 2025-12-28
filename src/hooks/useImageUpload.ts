@@ -48,9 +48,9 @@ export const useImageUpload = () => {
       const url = await getDownloadURL(snapshot.ref);
       setProgress(100);
       return url;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Image upload failed:", err);
-      setError(err?.message || "Upload failed");
+      setError((err instanceof Error && err.message) || "Upload failed");
       return null;
     }
   };

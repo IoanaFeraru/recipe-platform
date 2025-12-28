@@ -177,18 +177,22 @@ describe('RecipeService', () => {
   describe('search', () => {
     it('should search recipes by title', async () => {
       const { getDocs } = await import('firebase/firestore');
-      const mockRecipes = [
-        mockRecipe,
-        createMockRecipe({ title: 'Different Recipe' }),
-      ];
+      const recipe1 = mockRecipe;
+      const recipe2 = createMockRecipe({
+        title: 'Different Recipe',
+        description: 'A completely different dish'
+      });
+
+      const mockRecipes = [recipe1, recipe2];
       const mockSnapshot = createMockQuerySnapshot(mockRecipes);
 
+      vi.mocked(getDocs).mockClear();
       vi.mocked(getDocs).mockResolvedValue(mockSnapshot as any);
 
       const results = await service.search('Test Recipe');
 
       expect(results).toHaveLength(1);
-      expect(results[0].title).toContain('Test Recipe');
+      expect(results[0].title).toBe('Test Recipe');
     });
 
     it('should search recipes by description', async () => {

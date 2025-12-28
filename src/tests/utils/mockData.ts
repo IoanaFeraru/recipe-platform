@@ -113,7 +113,7 @@ export function createMockComment(overrides: Partial<Comment> = {}): Comment {
   };
 }
 
-export function createMockUser(overrides: any = {}) {
+export function createMockUser(overrides: Partial<typeof mockUser> = {}) {
   return {
     ...mockUser,
     ...overrides,

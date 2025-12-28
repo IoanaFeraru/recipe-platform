@@ -104,9 +104,9 @@ export interface Recipe {
 
   /**
    * Creation timestamp as stored by the persistence layer (e.g. Firestore).
-   * Kept as `any` to avoid leaking infrastructure-specific types into the domain.
+   * Can be a Firestore Timestamp or a Date object.
    */
-  createdAt: any;
+  createdAt: Date | { toDate(): Date; toMillis(): number };
 
   /**
    * Aggregated rating data derived from user reviews.

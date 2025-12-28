@@ -72,17 +72,11 @@ export const useRecipeForm = (initialRecipe?: Recipe) => {
     if (!initialRecipe) return;
 
     // Normalize ingredient shapes (supports legacy nesting like ing.name.{name,quantity,unit,notes}).
-    const normalizedIngredients: Ingredient[] = (initialRecipe.ingredients || []).map((ing: any) => {
-      const name = typeof ing.name === "string" ? ing.name : ing.name?.name || "";
-      const quantity =
-        ing.name?.quantity !== undefined
-          ? ing.name.quantity
-          : ing.quantity !== undefined
-            ? ing.quantity
-            : undefined;
-      const unit =
-        ing.name?.unit !== undefined ? ing.name.unit : ing.unit !== undefined ? ing.unit : undefined;
-      const notes = ing.name?.notes || ing.notes || "";
+    const normalizedIngredients: Ingredient[] = (initialRecipe.ingredients || []).map((ing) => {
+      const name = ing.name || "";
+      const quantity = ing.quantity;
+      const unit = ing.unit;
+      const notes = ing.notes || "";
 
       return { name, quantity, unit, notes };
     });
@@ -155,7 +149,7 @@ export const useRecipeForm = (initialRecipe?: Recipe) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const updateIngredient = (index: number, field: keyof Ingredient, value: any) => {
+  const updateIngredient = (index: number, field: keyof Ingredient, value: string | number | undefined) => {
     setFormData((prev) => {
       const nextIngredients = [...prev.ingredients];
       nextIngredients[index] = { ...nextIngredients[index], [field]: value };

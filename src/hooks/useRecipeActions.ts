@@ -23,7 +23,7 @@ interface UseRecipeActionsReturn {
   closeModal: () => void;
   openDeleteConfirmation: (recipeId: string, recipeName: string) => void;
   closeDeleteConfirmation: () => void;
-  handleCreateOrUpdate: (data: any) => Promise<void>;
+  handleCreateOrUpdate: (data: Partial<Recipe>) => Promise<void>;
   handleDelete: () => Promise<void>;
 }
 
@@ -107,7 +107,7 @@ export const useRecipeActions = ({
   }, []);
 
   const handleCreateOrUpdate = useCallback(
-    async (data: any) => {
+    async (data: Partial<Recipe>) => {
       if (!userId) {
         const msg = "User must be logged in";
         setError(msg);
@@ -122,10 +122,10 @@ export const useRecipeActions = ({
           await updateRecipe(editingRecipe.id!, data);
         } else {
           await createRecipe({
-            ...data,
+            ...(data as Omit<Recipe, "id" | "authorId" | "createdAt">),
             authorId: userId,
             createdAt: new Date(),
-          });
+          } as Omit<Recipe, "id">);
         }
 
         closeModal();

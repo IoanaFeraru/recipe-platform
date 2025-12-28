@@ -95,7 +95,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
       } catch (err: unknown) {
         const message =
           err && typeof err === "object" && "message" in err
-            ? String((err as any).message)
+            ? String(err.message)
             : "Registration failed";
 
         setError(message);

@@ -203,8 +203,8 @@ export class FavoriteService {
 
       const recentlyAdded = favorites
         .sort((a, b) => {
-          const aDate = a.createdAt?.toDate?.() || new Date(0);
-          const bDate = b.createdAt?.toDate?.() || new Date(0);
+          const aDate = 'toDate' in a.createdAt ? a.createdAt.toDate() : a.createdAt;
+          const bDate = 'toDate' in b.createdAt ? b.createdAt.toDate() : b.createdAt;
           return bDate.getTime() - aDate.getTime();
         })
         .slice(0, 5)

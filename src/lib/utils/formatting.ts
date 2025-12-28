@@ -89,8 +89,8 @@ export const calculateScaledQuantity = (
 /**
  * Formats a date as a relative, human-friendly string.
  */
-export const formatRelativeDate = (date: Date | any): string => {
-  const d = date?.toDate ? date.toDate() : new Date(date);
+export const formatRelativeDate = (date: Date | { toDate(): Date }): string => {
+  const d = 'toDate' in date ? date.toDate() : date;
   const now = new Date();
 
   const diffMs = now.getTime() - d.getTime();
@@ -108,8 +108,8 @@ export const formatRelativeDate = (date: Date | any): string => {
 /**
  * Formats a date as a locale-aware absolute date string.
  */
-export const formatDate = (date: Date | any): string => {
-  const d = date?.toDate ? date.toDate() : new Date(date);
+export const formatDate = (date: Date | { toDate(): Date }): string => {
+  const d = 'toDate' in date ? date.toDate() : date;
   return d.toLocaleDateString();
 };
 

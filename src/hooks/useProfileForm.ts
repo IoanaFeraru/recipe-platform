@@ -116,7 +116,7 @@ export const useProfileForm = (): UseProfileFormReturn => {
       setNewPhoto(null);
       setPhotoPreview(null);
       clearMessageAfterDelay(setPhotoMessage);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setPhotoMessage({ type: "error", text: "Failed to update photo." });
       console.error(err);
     } finally {
@@ -134,7 +134,7 @@ export const useProfileForm = (): UseProfileFormReturn => {
       await updateProfile(user, { displayName: name.trim() });
       setNameMessage({ type: "success", text: "Name updated successfully!" });
       clearMessageAfterDelay(setNameMessage);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNameMessage({ type: "error", text: "Failed to update name." });
       console.error(err);
     } finally {
@@ -163,9 +163,9 @@ export const useProfileForm = (): UseProfileFormReturn => {
       setCurrentPassword("");
       setNewPassword("");
       clearMessageAfterDelay(setPasswordMessage);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setPasswordError(err.message || "Failed to update password.");
+      setPasswordError((err instanceof Error && err.message) || "Failed to update password.");
     } finally {
       setIsChangingPassword(false);
     }
@@ -176,7 +176,7 @@ export const useProfileForm = (): UseProfileFormReturn => {
 
     try {
       await deleteAccount();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       alert("Failed to delete account. You may need to re-login first.");
     } finally {

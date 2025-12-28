@@ -37,22 +37,22 @@ export const mockStorage = {
 };
 
 // Helper to create mock document snapshot
-export function createMockDocSnapshot(data: any, exists = true) {
+export function createMockDocSnapshot<T = Record<string, unknown>>(data: T, exists = true) {
   return {
     exists: () => exists,
     data: () => data,
-    id: data?.id || 'mock-id',
-    ref: { id: data?.id || 'mock-id' },
+    id: ((data as Record<string, unknown>)?.id as string) || 'mock-id',
+    ref: { id: ((data as Record<string, unknown>)?.id as string) || 'mock-id' },
   };
 }
 
 // Helper to create mock query snapshot
-export function createMockQuerySnapshot(docs: any[]) {
+export function createMockQuerySnapshot<T = Record<string, unknown>>(docs: T[]) {
   return {
     empty: docs.length === 0,
     size: docs.length,
     docs: docs.map((data) => createMockDocSnapshot(data)),
-    forEach: (callback: (doc: any) => void) => {
+    forEach: (callback: (doc: ReturnType<typeof createMockDocSnapshot<T>>) => void) => {
       docs.forEach((data) => callback(createMockDocSnapshot(data)));
     },
   };

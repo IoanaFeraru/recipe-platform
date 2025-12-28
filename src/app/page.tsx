@@ -89,16 +89,19 @@ function HomePageContent() {
       );
     })
     .sort((a, b) => {
+      const getMillis = (date: Date | { toDate(): Date; toMillis(): number }) =>
+        'toMillis' in date ? date.toMillis() : date.getTime();
+
       switch (filters.sortBy) {
         case "az":
           return a.title.localeCompare(b.title);
         case "za":
           return b.title.localeCompare(a.title);
         case "dateAsc":
-          return a.createdAt.toMillis() - b.createdAt.toMillis();
+          return getMillis(a.createdAt) - getMillis(b.createdAt);
         case "dateDesc":
         default:
-          return b.createdAt.toMillis() - a.createdAt.toMillis();
+          return getMillis(b.createdAt) - getMillis(a.createdAt);
       }
     });
 
@@ -121,7 +124,7 @@ function HomePageContent() {
           mealType={filters.mealType}
           setMealType={setMealType}
           sortBy={filters.sortBy}
-          setSortBy={setSortBy as any}
+          setSortBy={setSortBy}
         />
 
         {!loading && filteredRecipes.length === 0 ? (

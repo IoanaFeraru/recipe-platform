@@ -27,6 +27,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 global.IntersectionObserver = class IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = '';
+  readonly thresholds = [];
+
   constructor() {}
   disconnect() {}
   observe() {}
@@ -34,7 +38,7 @@ global.IntersectionObserver = class IntersectionObserver {
     return [];
   }
   unobserve() {}
-} as any;
+} as unknown as typeof IntersectionObserver;
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

@@ -81,8 +81,8 @@ export default function CommentForm({
       await onSubmit(text, rating);
       setText("");
       setRating(null);
-    } catch (error: any) {
-      alert(error.message || "Failed to post comment");
+    } catch (error: unknown) {
+      alert((error instanceof Error && error.message) || "Failed to post comment");
     }
   };
 

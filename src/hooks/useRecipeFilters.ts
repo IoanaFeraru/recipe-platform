@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { DietaryOption } from "@/types/recipe";
 
-type SortOption = "az" | "za" | "dateDesc" | "dateAsc";
+type SortOption = "az" | "za" | "dateDesc" | "dateAsc" | "ratingDesc" | "popularityDesc";
 
 interface RecipeFilters {
   selectedTag: string | null;
@@ -62,7 +62,12 @@ export const useRecipeFilters = (initialSearch: string = ""): UseRecipeFiltersRe
   }, []);
 
   const setDietary = useCallback((dietary: DietaryOption[]) => {
-    setFilters((prev) => ({ ...prev, dietary }));
+    // Business rule: vegan implies vegetarian
+    let normalized = dietary;
+    if (dietary.includes("vegan") && !dietary.includes("vegetarian")) {
+      normalized = [...dietary, "vegetarian"];
+    }
+    setFilters((prev) => ({ ...prev, dietary: normalized }));
   }, []);
 
   const setDifficulty = useCallback((difficulty: "easy" | "medium" | "hard" | null) => {
@@ -91,7 +96,7 @@ export const useRecipeFilters = (initialSearch: string = ""): UseRecipeFiltersRe
 
   const activeFiltersCount =
     (filters.selectedTag ? 1 : 0) +
-    filters.dietary.length +
+    (filters.dietary.length > 0 ? 1 : 0) +
     (filters.difficulty ? 1 : 0) +
     (filters.mealType ? 1 : 0);
 

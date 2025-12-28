@@ -127,7 +127,7 @@ export default function DashboardPage() {
             isOpen={isModalOpen}
             onClose={closeModal}
             onSubmit={handleCreateOrUpdate}
-            editRecipe={editingRecipe}
+            editRecipe={editingRecipe || undefined}
           />
 
           {/* Delete Confirmation Modal */}

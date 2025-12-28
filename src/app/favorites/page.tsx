@@ -69,7 +69,7 @@ export default function FavoritesPage() {
           </h1>
 
           {/*
-            Future: "Clear all" action (destructive). If enabled, add a confirmation modal.
+            ToDo: "Clear all" action (destructive). If enabled, add a confirmation modal. + autorefresh after clearing.
             <button
               onClick={clearAllFavorites}
               className="text-sm text-(--color-danger) hover:underline"
