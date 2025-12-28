@@ -24,6 +24,7 @@
  * @module Navbar
  */
 
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "@/context/ThemeContext";
@@ -36,6 +37,7 @@ export default function Navbar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, toggleTheme, logoSrc } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const search = searchParams.get("q") ?? "";
 
@@ -56,6 +58,14 @@ export default function Navbar() {
     router.push("/");
   };
 
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleMobileMenuClose = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-3 bg-(--color-bg-secondary) shadow-md">
       <NavbarLogo logoSrc={logoSrc} />
@@ -67,6 +77,9 @@ export default function Navbar() {
         theme={theme}
         onLogout={handleLogout}
         onThemeToggle={toggleTheme}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onMobileMenuToggle={handleMobileMenuToggle}
+        onMobileMenuClose={handleMobileMenuClose}
       />
     </nav>
   );

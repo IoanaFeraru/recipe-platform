@@ -13,11 +13,13 @@
  * - Display guest actions (login and registration) when unauthenticated
  * - Provide a theme toggle control with visual state indication
  * - Delegate concrete action rendering to focused subcomponents
+ * - Show hamburger menu on mobile devices
  *
  * Design notes:
  * - Authentication state is injected via props to keep the component stateless
  * - UI concerns are separated into AuthenticatedActions and GuestActions for clarity
  * - Icon-only buttons are used for compact navigation affordances
+ * - Mobile menu is hidden on desktop (md breakpoint)
  *
  * @module NavbarActions
  */
@@ -27,6 +29,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Button from "../UI/Button";
 import ThemeToggle from "../ThemeToggle";
+import { MobileMenu } from "./MobileMenu";
 import type { User } from "firebase/auth";
 
 interface NavbarActionsProps {
@@ -34,6 +37,9 @@ interface NavbarActionsProps {
   theme: "light" | "dark";
   onLogout: () => void;
   onThemeToggle: () => void;
+  isMobileMenuOpen: boolean;
+  onMobileMenuToggle: () => void;
+  onMobileMenuClose: () => void;
 }
 
 export const NavbarActions: React.FC<NavbarActionsProps> = ({
@@ -41,20 +47,37 @@ export const NavbarActions: React.FC<NavbarActionsProps> = ({
   theme,
   onLogout,
   onThemeToggle,
+  isMobileMenuOpen,
+  onMobileMenuToggle,
+  onMobileMenuClose,
 }) => {
   return (
-    <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-      {user ? (
-        <AuthenticatedActions user={user} onLogout={onLogout} />
-      ) : (
-        <GuestActions />
-      )}
+    <>
+      {/* Desktop Actions - Hidden on Mobile */}
+      <div className="hidden md:flex items-center gap-1 sm:gap-2 shrink-0">
+        {user ? (
+          <AuthenticatedActions user={user} onLogout={onLogout} />
+        ) : (
+          <GuestActions />
+        )}
 
-      <ThemeToggle checked={theme === "dark"} onChange={onThemeToggle} />
-      <span className="ml-1 sm:ml-2 text-sm hidden sm:inline" aria-hidden="true">
-        {theme === "dark" ? "🌙" : "☀️"}
-      </span>
-    </div>
+        <ThemeToggle checked={theme === "dark"} onChange={onThemeToggle} />
+        <span className="ml-1 sm:ml-2 text-sm" aria-hidden="true">
+          {theme === "dark" ? "🌙" : "☀️"}
+        </span>
+      </div>
+
+      {/* Mobile Menu - Shown on Mobile Only */}
+      <MobileMenu
+        user={user}
+        theme={theme}
+        onLogout={onLogout}
+        onThemeToggle={onThemeToggle}
+        isOpen={isMobileMenuOpen}
+        onToggle={onMobileMenuToggle}
+        onClose={onMobileMenuClose}
+      />
+    </>
   );
 };
 
