@@ -108,8 +108,8 @@ function HomePageContent() {
 
   return (
     <PageErrorBoundary>
-      <main className="p-8 max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-(--color-text) garet-heavy">
+      <main className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 lg:mb-8 text-(--color-text) garet-heavy">
           Discover Recipes
         </h1>
 
@@ -165,11 +165,11 @@ function HomePageContent() {
 export default function HomePage() {
   return (
     <Suspense fallback={
-      <main className="p-8 max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-(--color-text) garet-heavy">
+      <main className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 lg:mb-8 text-(--color-text) garet-heavy">
           Discover Recipes
         </h1>
-        <div className="flex justify-center items-center min-h-[400px]">
+        <div className="flex justify-center items-center min-h-100">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-(--color-primary) border-t-transparent"></div>
         </div>
       </main>

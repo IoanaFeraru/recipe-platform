@@ -87,11 +87,11 @@ export default function FilterBar({
   };
 
   return (
-    <div className="bg-(--color-bg-secondary) border-2 border-(--color-border) rounded-2xl p-6 mb-8 shadow-[4px_4px_0_0_var(--color-shadow)]">
-      <div className="flex items-center justify-between pt-2 border-t-2 border-(--color-border)">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-semibold text-(--color-text)">
+    <div className="bg-(--color-bg-secondary) border-2 border-(--color-border) rounded-2xl p-3 sm:p-6 mb-4 sm:mb-8 shadow-[4px_4px_0_0_var(--color-shadow)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 pt-2 border-t-2 border-(--color-border)">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full">
+            <label className="text-sm font-semibold text-(--color-text) whitespace-nowrap">
               📊 Sort By
             </label>
             <SortButtons sortBy={sortBy} onSortChange={setSortBy} />
@@ -99,7 +99,7 @@ export default function FilterBar({
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="px-6 py-3 rounded-full bg-(--color-primary) text-white font-semibold hover:brightness-110 transition shadow-[2px_2px_0_0_var(--color-shadow)]"
+            className="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-(--color-primary) text-white font-semibold hover:brightness-110 transition shadow-[2px_2px_0_0_var(--color-shadow)] text-sm sm:text-base whitespace-nowrap w-full sm:w-auto"
           >
             {showFilters ? "🔼 Hide" : "🔽 Show"} Filters
             {activeFiltersCount > 0 && (
@@ -113,7 +113,7 @@ export default function FilterBar({
         {activeFiltersCount > 0 && (
           <button
             onClick={resetFilters}
-            className="px-5 py-3 rounded-full border-2 border-(--color-danger) text-(--color-danger) hover:bg-(--color-danger) hover:text-white transition font-semibold"
+            className="px-4 sm:px-5 py-2 sm:py-3 rounded-full border-2 border-(--color-danger) text-(--color-danger) hover:bg-(--color-danger) hover:text-white transition font-semibold text-sm sm:text-base w-full sm:w-auto"
           >
             ♻️ Reset All
           </button>
@@ -121,10 +121,10 @@ export default function FilterBar({
       </div>
 
       {showFilters && (
-        <div className="mt-6 pt-6 border-t-2 border-(--color-border) space-y-6 animate-in slide-in-from-top duration-300">
+        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t-2 border-(--color-border) space-y-4 sm:space-y-6 animate-in slide-in-from-top duration-300">
           <DietaryFilter dietary={dietary} onDietaryChange={setDietary} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <DifficultySlider
               difficulty={difficulty}
               onDifficultyChange={setDifficulty}

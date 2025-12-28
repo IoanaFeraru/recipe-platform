@@ -58,23 +58,23 @@ export const SortButtons: React.FC<SortButtonsProps> = ({
   onSortChange,
 }) => {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto">
       {SORT_OPTIONS.map((option) => (
         <button
           key={option.value}
           onClick={() => onSortChange(option.value)}
           className={`
-            px-4 py-2 rounded-full font-semibold text-sm transition-all
+            px-2 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm transition-all whitespace-nowrap
             ${
               sortBy === option.value
-                ? "bg-(--color-primary) text-white shadow-[4px_4px_0_0_var(--color-shadow)] scale-105"
+                ? "bg-(--color-primary) text-white shadow-[2px_2px_0_0_var(--color-shadow)] sm:shadow-[4px_4px_0_0_var(--color-shadow)] scale-105"
                 : "bg-(--color-bg) border-2 border-(--color-border) text-(--color-text) hover:border-(--color-primary) hover:scale-105"
             }
           `}
           aria-label={`Sort by ${option.label}`}
         >
-          <span className="mr-1">{option.icon}</span>
-          {option.label}
+          <span className="mr-0.5 sm:mr-1">{option.icon}</span>
+          <span className="hidden sm:inline">{option.label}</span>
         </button>
       ))}
     </div>

@@ -33,14 +33,14 @@ export const NavbarLogo: React.FC<NavbarLogoProps> = ({ logoSrc }) => {
   return (
     <Link
       href="/"
-      className="flex items-center gap-2 text-(--color-text) text-3xl hover:text-(--color-primary) transition-colors garet-heavy"
+      className="flex items-center gap-1 sm:gap-2 text-(--color-text) text-xl sm:text-3xl hover:text-(--color-primary) transition-colors garet-heavy shrink-0"
     >
       <img
         src={logoSrc}
         alt="CookHub Logo"
         width={48}
         height={48}
-        className="h-auto align-middle"
+        className="align-middle w-8 h-8 sm:w-12 sm:h-12"
       />
       <span className="leading-none">CookHub</span>
     </Link>

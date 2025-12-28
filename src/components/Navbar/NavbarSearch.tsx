@@ -45,7 +45,7 @@ export const NavbarSearch: React.FC<NavbarSearchProps> = ({
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="flex-1 max-w-md px-3 py-2 rounded-md placeholder-(--color-text-muted) focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-shadow"
+      className="flex-1 max-w-md px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base rounded-md placeholder-(--color-text-muted) focus:outline-none focus:ring-2 focus:ring-(--color-primary) transition-shadow"
       style={{
         backgroundColor: "rgba(193,157,125,0.5)",
         border: "none",

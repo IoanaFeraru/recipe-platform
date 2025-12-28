@@ -43,7 +43,7 @@ export const RecipeCardBadges: React.FC<RecipeCardBadgesProps> = ({
   onTagClick,
 }) => {
   return (
-    <div className="px-5 pb-3 space-y-3">
+    <div className="px-3 sm:px-5 pb-2 sm:pb-3 space-y-2 sm:space-y-3">
       {/* Difficulty Badge */}
       {difficulty && (
         <div>
@@ -56,7 +56,7 @@ export const RecipeCardBadges: React.FC<RecipeCardBadgesProps> = ({
 
       {/* Dietary Badges */}
       {dietary.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {dietary.slice(0, 3).map((diet) => (
             <DietaryBadge
               key={diet}
@@ -65,7 +65,7 @@ export const RecipeCardBadges: React.FC<RecipeCardBadgesProps> = ({
             />
           ))}
           {dietary.length > 3 && (
-            <span className="text-xs text-(--color-text-muted)">
+            <span className="text-[10px] sm:text-xs text-(--color-text-muted)">
               +{dietary.length - 3}
             </span>
           )}

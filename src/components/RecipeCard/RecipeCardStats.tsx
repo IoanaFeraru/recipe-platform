@@ -46,28 +46,28 @@ export const RecipeCardStats: React.FC<RecipeCardStatsProps> = ({
 }) => {
   return (
     <div
-      className="flex flex-wrap gap-3 text-xs px-5 pb-3"
+      className="flex flex-wrap gap-2 sm:gap-3 text-[10px] sm:text-xs px-3 sm:px-5 pb-2 sm:pb-3"
       style={{ color: "var(--color-text-muted)" }}
     >
-      <span className="flex items-center gap-1">
-        <span className="text-base">👥</span>
+      <span className="flex items-center gap-0.5 sm:gap-1">
+        <span className="text-sm sm:text-base">👥</span>
         {formatCount(servings, "serving")}
       </span>
       <span>•</span>
-      <span className="flex items-center gap-1">
-        <span className="text-base">🥄</span>
+      <span className="flex items-center gap-0.5 sm:gap-1">
+        <span className="text-sm sm:text-base">🥄</span>
         {formatCount(ingredientsCount, "ingredient")}
       </span>
       <span>•</span>
-      <span className="flex items-center gap-1">
-        <span className="text-base">📝</span>
+      <span className="flex items-center gap-0.5 sm:gap-1">
+        <span className="text-sm sm:text-base">📝</span>
         {formatCount(stepsCount, "step")}
       </span>
       {totalActiveTime > 0 && (
         <>
           <span>•</span>
-          <span className="flex items-center gap-1">
-            <span className="text-base">⏱️</span>
+          <span className="flex items-center gap-0.5 sm:gap-1">
+            <span className="text-sm sm:text-base">⏱️</span>
             {formattedTotalTime}
           </span>
         </>

@@ -41,11 +41,11 @@ export const RecipeCardContent: React.FC<RecipeCardContentProps> = ({
   favoriteLoading,
 }) => {
   return (
-    <div className="p-5">
+    <div className="p-3 sm:p-5">
       {/* Title & Favorite */}
       <div className="flex justify-between items-start gap-2 mb-2">
         <h2
-          className="text-xl font-bold garet-heavy"
+          className="text-base sm:text-xl font-bold garet-heavy"
           style={{ color: "var(--color-text)" }}
         >
           {title}
@@ -55,7 +55,7 @@ export const RecipeCardContent: React.FC<RecipeCardContentProps> = ({
           onClick={onFavoriteToggle}
           disabled={favoriteLoading}
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          className="text-xl transition disabled:opacity-50"
+          className="text-lg sm:text-xl transition disabled:opacity-50 shrink-0"
           style={{
             color: isFavorite ? "red" : "var(--color-text-muted)",
           }}
@@ -67,7 +67,7 @@ export const RecipeCardContent: React.FC<RecipeCardContentProps> = ({
       {/* Description */}
       {description && (
         <p
-          className="text-sm mb-3 line-clamp-2"
+          className="text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2"
           style={{ color: "var(--color-text-muted)" }}
         >
           {description}

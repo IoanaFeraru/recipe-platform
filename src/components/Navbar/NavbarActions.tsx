@@ -43,7 +43,7 @@ export const NavbarActions: React.FC<NavbarActionsProps> = ({
   onThemeToggle,
 }) => {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 sm:gap-2 shrink-0">
       {user ? (
         <AuthenticatedActions user={user} onLogout={onLogout} />
       ) : (
@@ -51,7 +51,7 @@ export const NavbarActions: React.FC<NavbarActionsProps> = ({
       )}
 
       <ThemeToggle checked={theme === "dark"} onChange={onThemeToggle} />
-      <span className="ml-2 text-sm" aria-hidden="true">
+      <span className="ml-1 sm:ml-2 text-sm hidden sm:inline" aria-hidden="true">
         {theme === "dark" ? "🌙" : "☀️"}
       </span>
     </div>
@@ -65,14 +65,14 @@ const AuthenticatedActions: React.FC<{
   return (
     <>
       <Link href="/favorites" aria-label="Favorites">
-        <Button variant="primary" iconOnly>
-          <img src="/fi-sr-heart.svg" alt="" className="w-5 h-5" />
+        <Button variant="primary" iconOnly className="w-8 h-8 sm:w-10 sm:h-10 p-1.5 sm:p-2">
+          <img src="/fi-sr-heart.svg" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
       </Link>
 
       <Link href="/dashboard" aria-label="My Recipes">
-        <Button variant="primary" iconOnly>
-          <img src="/books.svg" alt="" className="w-5 h-5" />
+        <Button variant="primary" iconOnly className="w-8 h-8 sm:w-10 sm:h-10 p-1.5 sm:p-2">
+          <img src="/books.svg" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
       </Link>
 
@@ -80,12 +80,13 @@ const AuthenticatedActions: React.FC<{
         <Button
           variant="primary"
           iconOnly
-          className="relative w-10 h-10 p-0 rounded-full flex-none overflow-hidden"
+          className="relative w-8 h-8 sm:w-10 sm:h-10 p-0 rounded-full shrink-0 overflow-hidden"
         >
           <Image
             src={user.photoURL || "/default-profile.svg"}
             alt="Profile"
             fill
+            sizes="(max-width: 640px) 32px, 40px"
             className="object-cover"
             style={{ borderRadius: "9999px" }}
           />
@@ -97,8 +98,9 @@ const AuthenticatedActions: React.FC<{
         onClick={onLogout}
         iconOnly
         aria-label="Logout"
+        className="w-8 h-8 sm:w-10 sm:h-10 p-1.5 sm:p-2"
       >
-        <img src="/user-logout.svg" alt="" className="w-5 h-5" />
+        <img src="/user-logout.svg" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
       </Button>
     </>
   );
@@ -108,10 +110,10 @@ const GuestActions: React.FC = () => {
   return (
     <>
       <Link href="/login">
-        <Button variant="primary">Log In</Button>
+        <Button variant="primary" className="text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap">Log In</Button>
       </Link>
       <Link href="/register">
-        <Button variant="primary">Register</Button>
+        <Button variant="primary" className="text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap">Register</Button>
       </Link>
     </>
   );
