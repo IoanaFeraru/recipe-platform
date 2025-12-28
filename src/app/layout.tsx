@@ -31,6 +31,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import { ThemeProvider } from "@/context/ThemeContext";
 import ScrollToTop from "@/components/UI/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -63,7 +64,9 @@ export default function RootLayout({
         <ErrorBoundary>
           <AuthProvider>
             <ThemeProvider>
-              <Navbar />
+              <Suspense fallback={<div className="h-16 bg-(--color-bg-secondary)"></div>}>
+                <Navbar />
+              </Suspense>
               {children}
             </ThemeProvider>
           </AuthProvider>

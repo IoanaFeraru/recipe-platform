@@ -69,12 +69,11 @@ export const mockComment: Comment = {
   id: 'comment-1',
   recipeId: 'recipe-1',
   userId: 'test-user-id',
-  userName: 'Test User',
+  userEmail: 'test@example.com',
   userPhotoURL: 'https://example.com/photo.jpg',
   text: 'Great recipe!',
   rating: 5,
   createdAt: new Date('2024-01-15'),
-  updatedAt: new Date('2024-01-15'),
 };
 
 export const mockComments: Comment[] = [
@@ -85,17 +84,15 @@ export const mockComments: Comment[] = [
     rating: 4,
     text: 'Very good, but could use more salt',
     createdAt: new Date('2024-01-16'),
-    updatedAt: new Date('2024-01-16'),
   },
   {
     ...mockComment,
     id: 'comment-3',
     userId: 'another-user-id',
-    userName: 'Another User',
+    userEmail: 'another@example.com',
     rating: 5,
     text: 'Perfect!',
     createdAt: new Date('2024-01-17'),
-    updatedAt: new Date('2024-01-17'),
   },
 ];
 

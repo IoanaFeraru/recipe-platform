@@ -28,7 +28,7 @@
  *
  * @component
  */
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import FilterBar from "@/components/FilterBar/FilterBar";
 import { useRecipeFilters } from "@/hooks/useRecipeFilters";
@@ -38,7 +38,7 @@ import { PaginationControls } from "@/components/UI/PaginationControls";
 import { EmptyState } from "@/components/UI";
 import { PageErrorBoundary } from "@/components/ErrorBoundary";
 
-export default function HomePage() {
+function HomePageContent() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("q")?.toLowerCase() ?? "";
 
@@ -159,5 +159,22 @@ export default function HomePage() {
         )}
       </main>
     </PageErrorBoundary>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <main className="p-8 max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-(--color-text) garet-heavy">
+          Discover Recipes
+        </h1>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-(--color-primary) border-t-transparent"></div>
+        </div>
+      </main>
+    }>
+      <HomePageContent />
+    </Suspense>
   );
 }
