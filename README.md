@@ -473,3 +473,6 @@ Key achievements of CookHub include:
 5. **Gamification**: Add badges, achievements, and user progression system based on analytics;
 6. **Offline Support**: Implement service workers for offline recipe access
 7. **Admin Panel**: Create moderation tools for community management
+
+### See it live:
+[Vercel link](https://recipe-platform-pruo.vercel.app/)
